@@ -11,21 +11,29 @@ function getManagerWorkerDocuments(req, res) {
     return res.status(404).json({ message: "Trabajador no encontrado" });
   }
 
+  const manager = users.find(
+    (u) => u.id == req.params.managerId && u.role === "manager"
+  );
+  if (!manager) {
+    return res.status(404).json({ message: "Manager no encontrado" });
+  }
+
+  // Ajustar la ruta para acceder a la carpeta de documentos del trabajador
   const signedDocsPath = path.join(
     __dirname,
     `../../uploads/society_${worker.societyId}/worker_${workerId}`
   );
 
   if (!fs.existsSync(signedDocsPath)) {
-    return res.json({ documents: [] });
+    return res.json({ documents: [] }); // Devuelve un arreglo vacío si no hay documentos
   }
 
-  const signedDocuments = fs.readdirSync(signedDocsPath).map((file) => ({
+  const documents = fs.readdirSync(signedDocsPath).map((file) => ({
     fileName: file,
     filePath: `/uploads/society_${worker.societyId}/worker_${workerId}/${file}`,
   }));
 
-  res.json({ documents: signedDocuments });
+  res.json({ documents });
 }
 
 module.exports = getManagerWorkerDocuments;

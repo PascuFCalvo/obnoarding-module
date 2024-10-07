@@ -99,9 +99,10 @@ async function loadWorkerList() {
 }
 
 // Cargar documentos firmados por el trabajador seleccionado (manager)
+// Cargar documentos firmados por el trabajador seleccionado (manager)
 async function loadWorkerDocuments(workerId) {
   const response = await fetch(
-    `http://localhost:3000/workers/manager/worker-documents/${workerId}`
+    `http://localhost:3000/workers/manager/worker-documents/${currentUser.id}/${workerId}`
   );
   const data = await response.json();
 

@@ -11,15 +11,18 @@ function getSignedDocuments(req, res) {
     return res.status(404).json({ message: "Trabajador no encontrado" });
   }
 
+  // Ajustar la ruta para acceder a la carpeta de documentos firmados
   const signedDocsPath = path.join(
     __dirname,
     `../../uploads/society_${worker.societyId}/worker_${workerId}`
   );
 
+  // Verificar si la carpeta de documentos firmados existe
   if (!fs.existsSync(signedDocsPath)) {
-    return res.json({ signedDocuments: [] });
+    return res.json({ signedDocuments: [] }); // Si no existe, devolver lista vacía
   }
 
+  // Leer los archivos dentro de la carpeta de documentos firmados del trabajador
   const signedDocuments = fs.readdirSync(signedDocsPath).map((file) => ({
     fileName: file,
     filePath: `/uploads/society_${worker.societyId}/worker_${workerId}/${file}`,
