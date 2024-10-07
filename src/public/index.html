@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Documentos y Firma</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: #333;
+        text-align: center;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      label {
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      input[type="text"],
+      input[type="password"],
+      input[type="file"],
+      input[type="text"] {
+        padding: 10px;
+        width: 80%;
+        max-width: 300px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        background-color: #4caf50;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      #managerArea,
+      #workerArea {
+        background-color: white;
+        padding: 20px;
+        margin: 20px auto;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+      }
+
+      #signaturePad {
+        border: 1px solid black;
+        width: 100%;
+        max-width: 300px;
+        height: 150px;
+        margin: 20px auto;
+      }
+
+      iframe {
+        width: 100%;
+        height: 600px;
+        border: 1px solid black;
+        margin: 20px 0;
+      }
+
+      ul,
+      div {
+        list-style: none;
+        padding: 0;
+      }
+
+      ul li,
+      div li {
+        padding: 8px;
+        background-color: #f9f9f9;
+        margin-bottom: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      ul li a {
+        text-decoration: none;
+        color: #333;
+      }
+
+      ul li a:hover {
+        text-decoration: underline;
+      }
+
+      #documentsBySociety,
+      #documentsByWorker,
+      #workerList {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+      }
+
+      .signed {
+        color: green;
+        font-weight: bold;
+        display: inline-block;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Login</h1>
+    <form id="loginForm">
+      <label for="username">Usuario:</label>
+      <input type="text" id="username" name="username" /><br /><br />
+      <label for="password">Contraseña:</label>
+      <input type="password" id="password" name="password" /><br /><br />
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+
+    <button id="logoutBtn" class="hidden">Cerrar Sesión</button>
+
+    <!-- Área del Manager -->
+    <div id="managerArea" class="hidden">
+      <h2>Subir Documento para tu Sociedad</h2>
+      <form id="uploadForm">
+        <input type="file" id="document" name="document" /><br /><br />
+        <button type="submit">Subir Documento</button>
+      </form>
+
+      <h2>Documentos de la Sociedad</h2>
+      <div id="documentsBySociety"></div>
+
+      <h2>Trabajadores</h2>
+      <div id="workerList"></div>
+
+      <h2>Documentación de los Trabajadores</h2>
+      <div id="documentsByWorker"></div>
+    </div>
+
+    <!-- Área del Trabajador -->
+    <div id="workerArea" class="hidden">
+      <h2>Tus Documentos</h2>
+      <ul id="documentList"></ul>
+
+      <h3>Mis Documentos Firmados</h3>
+      <ul id="signedDocumentList"></ul>
+
+      <h3>Previsualización del Documento</h3>
+      <iframe id="pdfViewer" class="hidden"></iframe>
+
+      <h3>Firmar Documento</h3>
+      <canvas id="signaturePad"></canvas><br />
+      <input id="name" type="text" placeholder="Nombre" /><br />
+      <input id="DNI" type="text" placeholder="DNI" /><br />
+      <button id="clearSignature">Limpiar Firma</button>
+      <button id="saveSignature" class="hidden">Guardar Firma</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script>
+      let currentUser = null;
+      let currentDocument = null;
+      const signaturePad = new SignaturePad(
+        document.getElementById("signaturePad")
+      );
+
+      function resetUI() {
+        document.getElementById("loginForm").reset();
+        document.getElementById("managerArea").classList.add("hidden");
+        document.getElementById("workerArea").classList.add("hidden");
+        document.getElementById("pdfViewer").classList.add("hidden");
+        document.getElementById("saveSignature").classList.add("hidden");
+        signaturePad.clear();
+        currentUser = null;
+        currentDocument = null;
+      }
+
+      // Login del usuario
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+
+          const response = await fetch("http://localhost:3000/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            currentUser = data.user;
+            alert(`Login exitoso. Bienvenido, ${currentUser.name}`);
+
+            document.getElementById("logoutBtn").classList.remove("hidden");
+
+            if (currentUser.role === "manager") {
+              document.getElementById("managerArea").classList.remove("hidden");
+              loadWorkerList(); // Cargar lista de trabajadores
+            } else if (currentUser.role === "worker") {
+              document.getElementById("workerArea").classList.remove("hidden");
+              loadDocumentsForWorker(); // Cargar documentos subidos por el manager
+              loadSignedDocumentsForWorker(); // Cargar documentos firmados
+            }
+          } else {
+            alert("Login fallido: " + data.message);
+          }
+        });
+
+      // Logout del usuario
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", function () {
+          alert("Has cerrado sesión correctamente.");
+          resetUI(); // Reiniciar toda la interfaz
+        });
+
+      // Subida de documentos para el manager
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const documentFile = document.getElementById("document").files[0];
+          const formData = new FormData();
+          formData.append("document", documentFile);
+          formData.append("societyId", currentUser.societyId); // Añadir societyId al formulario
+
+          const response = await fetch("http://localhost:3000/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            alert("Documento subido correctamente.");
+            loadSocietyDocuments(); // Recargar la lista de documentos subidos
+          } else {
+            alert("Error al subir el documento: " + data.message);
+          }
+        });
+
+      // Cargar lista de trabajadores para el manager
+      async function loadWorkerList() {
+        const response = await fetch(
+          `http://localhost:3000/manager/worker-list/${currentUser.id}`
+        );
+        const data = await response.json();
+
+        const workerList = document.getElementById("workerList");
+        workerList.innerHTML = ""; // Limpiar lista de trabajadores anteriores
+
+        // Listar cada trabajador
+        data.workers.forEach((worker) => {
+          const workerItem = document.createElement("div");
+          workerItem.innerHTML = `<strong>${worker.name}</strong>`;
+          workerItem.style.cursor = "pointer";
+
+          workerItem.addEventListener("click", () =>
+            loadWorkerDocuments(worker.id)
+          );
+
+          workerList.appendChild(workerItem);
+        });
+      }
+
+      // Cargar documentos firmados por el trabajador seleccionado (manager)
+      async function loadWorkerDocuments(workerId) {
+        const response = await fetch(
+          `http://localhost:3000/manager/worker-documents/${workerId}`
+        );
+        const data = await response.json();
+
+        const documentsByWorkerContainer =
+          document.getElementById("documentsByWorker");
+        documentsByWorkerContainer.innerHTML = ""; // Limpiar contenido anterior
+
+        // Listar los documentos firmados por el trabajador
+        data.documents.forEach((doc) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+          documentsByWorkerContainer.appendChild(li);
+        });
+      }
+
+      // Cargar documentos subidos por el manager para el trabajador
+      async function loadDocumentsForWorker() {
+        const response = await fetch(
+          `http://localhost:3000/documents/${currentUser.id}`
+        );
+        const data = await response.json();
+
+        const documentList = document.getElementById("documentList");
+        documentList.innerHTML = ""; // Limpiar lista de documentos anteriores
+
+        // Listar documentos subidos por el manager
+        data.societyDocuments.forEach((doc) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<span style="cursor:pointer">${doc.fileName}</span>`;
+          li.addEventListener("click", () => {
+            currentDocument = doc.fileName; // Actualizar el documento actual seleccionado
+            previewDocument(doc.filePath);
+          });
+          documentList.appendChild(li);
+        });
+      }
+
+      // Previsualizar el documento
+      function previewDocument(documentUrl) {
+        const pdfViewer = document.getElementById("pdfViewer");
+        pdfViewer.src = documentUrl;
+        pdfViewer.classList.remove("hidden"); // Mostrar el iframe
+
+        // Mostrar el botón para guardar la firma
+        document.getElementById("saveSignature").classList.remove("hidden");
+      }
+
+      // Guardar la firma en el documento
+      document
+        .getElementById("saveSignature")
+        .addEventListener("click", async function () {
+          if (signaturePad.isEmpty()) {
+            alert("Por favor, añade una firma.");
+            return;
+          }
+
+          const name = document.getElementById("name").value;
+          const dni = document.getElementById("DNI").value;
+
+          if (!name || !dni) {
+            alert("Por favor, introduce tu nombre y DNI.");
+            return;
+          }
+
+          const signatureDataUrl = signaturePad.toDataURL(); // Obtener la firma en formato PNG
+          const formData = {
+            workerId: currentUser.id,
+            documentName: currentDocument,
+            signatureDataUrl: signatureDataUrl,
+            name: name,
+            DNI: dni,
+            date: new Date().toLocaleDateString(),
+          };
+
+          try {
+            const response = await fetch(
+              "http://localhost:3000/sign-document",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              alert("Documento firmado correctamente.");
+
+              const pdfViewer = document.getElementById("pdfViewer");
+              pdfViewer.src = data.filePath;
+
+              document.getElementById("saveSignature").classList.add("hidden");
+              signaturePad.clear();
+              loadDocumentsForWorker();
+              loadSignedDocumentsForWorker(); // Recargar documentos firmados
+            } else {
+              const errorData = await response.json();
+              alert("Error al firmar el documento.");
+            }
+          } catch (error) {
+            alert("Error de red al firmar el documento.");
+          }
+        });
+
+      // Cargar documentos firmados por el trabajador
+      async function loadSignedDocumentsForWorker() {
+        const response = await fetch(
+          `http://localhost:3000/worker/signed-documents/${currentUser.id}`
+        );
+        const data = await response.json();
+
+        const signedDocumentList =
+          document.getElementById("signedDocumentList");
+        signedDocumentList.innerHTML = ""; // Limpiar lista de documentos firmados
+
+        // Listar documentos firmados
+        data.signedDocuments.forEach((doc) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+          signedDocumentList.appendChild(li);
+        });
+      }
+
+      // Cargar documentos subidos por el manager para mostrar en "Documentos de la Sociedad"
+      async function loadSocietyDocuments() {
+        const response = await fetch(
+          `http://localhost:3000/society-documents/${currentUser.societyId}`
+        );
+        const data = await response.json();
+
+        const documentsBySocietyContainer =
+          document.getElementById("documentsBySociety");
+        documentsBySocietyContainer.innerHTML = ""; // Limpiar contenido anterior
+
+        // Listar los documentos subidos por el manager
+        data.documents.forEach((doc) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+          documentsBySocietyContainer.appendChild(li);
+        });
+      }
+
+      // Actualización del evento de login del manager para cargar los documentos subidos
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+
+          const response = await fetch("http://localhost:3000/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            currentUser = data.user;
+            alert(`Login exitoso. Bienvenido, ${currentUser.name}`);
+
+            document.getElementById("logoutBtn").classList.remove("hidden");
+
+            if (currentUser.role === "manager") {
+              document.getElementById("managerArea").classList.remove("hidden");
+              loadWorkerList(); // Cargar lista de trabajadores
+              loadSocietyDocuments(); // Cargar documentos subidos por el manager
+            } else if (currentUser.role === "worker") {
+              document.getElementById("workerArea").classList.remove("hidden");
+              loadDocumentsForWorker(); // Cargar documentos subidos por el manager
+              loadSignedDocumentsForWorker(); // Cargar documentos firmados
+            }
+          } else {
+            alert("Login fallido: " + data.message);
+          }
+        });
+    </script>
+  </body>
+</html>
