@@ -13,7 +13,45 @@ function resetUI() {
   currentDocument = null;
 }
 
-// Login del usuario
+// Cargar departamentos para el manager
+async function loadDepartments() {
+  const response = await fetch(
+    "http://localhost:3000/workers/workerDepartments"
+  );
+  const data = await response.json();
+
+  const departmentSelect = document.getElementById("department");
+  departmentSelect.innerHTML = ""; // Limpiar opciones anteriores
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "general";
+  defaultOption.text = "General";
+  departmentSelect.appendChild(defaultOption);
+  data.departments.forEach((department) => {
+    const option = document.createElement("option");
+    option.value = department;
+    option.text = department;
+    departmentSelect.appendChild(option);
+  });
+}
+
+// Cargar bloques
+async function loadBlocks() {
+  const response = await fetch("http://localhost:3000/managers/blocks");
+  const data = await response.json();
+
+  const blockSelect = document.getElementById("block");
+  blockSelect.innerHTML = ""; // Limpiar opciones anteriores
+
+  if (Array.isArray(data.blocks)) {
+    data.blocks.forEach((block) => {
+      const option = document.createElement("option");
+      option.value = block; // Asigna el valor del bloque
+      option.text = block; // Asigna el texto que se mostrará
+      blockSelect.appendChild(option); // Añadir la opción al select
+    });
+  }
+}
+
 document
   .getElementById("loginForm")
   .addEventListener("submit", async function (event) {
@@ -35,6 +73,8 @@ document
 
       if (currentUser.role === "manager") {
         document.getElementById("managerArea").classList.remove("hidden");
+        loadDepartments(); // Cargar departamentos al iniciar sesión como manager
+        loadBlocks(); // Cargar bloques al iniciar sesión como manager
         loadWorkerList();
         loadSocietyDocuments();
       } else if (currentUser.role === "worker") {
@@ -58,22 +98,51 @@ document
   .getElementById("uploadForm")
   .addEventListener("submit", async function (event) {
     event.preventDefault();
+
+    // Obtener valores del formulario
     const documentFile = document.getElementById("document").files[0];
-    const formData = new FormData();
-    formData.append("document", documentFile);
-    formData.append("societyId", currentUser.societyId);
+    const societyId = currentUser.societyId; // Suponiendo que tienes el id de la sociedad en currentUser
+    const department = document.getElementById("department").value; // Obtener departamento
+    const block = document.getElementById("block").value; // Obtener bloque
 
-    const response = await fetch("http://localhost:3000/documents/upload", {
-      method: "POST",
-      body: formData,
-    });
+    // Enviar información de la sociedad, departamento y bloque
+    const infoResponse = await fetch(
+      "http://localhost:3000/documents/upload-info",
+      {
+        method: "POST",
+        body: JSON.stringify({ societyId, department, block }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const data = await response.json();
-    if (response.ok) {
+    if (!infoResponse.ok) {
+      const infoData = await infoResponse.json();
+      alert(
+        "Error al enviar la información de sociedad, departamento y bloque: " +
+          infoData.message
+      );
+      return; // Detener si falla
+    }
+
+    // Subir el archivo
+    const fileFormData = new FormData();
+    fileFormData.append("document", documentFile);
+    const fileResponse = await fetch(
+      "http://localhost:3000/documents/upload-file",
+      {
+        method: "POST",
+        body: fileFormData,
+      }
+    );
+
+    const fileData = await fileResponse.json();
+    if (fileResponse.ok) {
       alert("Documento subido correctamente.");
       loadSocietyDocuments();
     } else {
-      alert("Error al subir el documento: " + data.message);
+      alert("Error al subir el documento: " + fileData.message);
     }
   });
 
@@ -98,7 +167,6 @@ async function loadWorkerList() {
   });
 }
 
-// Cargar documentos firmados por el trabajador seleccionado (manager)
 // Cargar documentos firmados por el trabajador seleccionado (manager)
 async function loadWorkerDocuments(workerId) {
   const response = await fetch(
@@ -125,23 +193,41 @@ async function loadDocumentsForWorker() {
   const data = await response.json();
 
   const documentList = document.getElementById("documentList");
-  documentList.innerHTML = "";
+  documentList.innerHTML = ""; // Limpiar la lista de documentos
 
-  data.societyDocuments.forEach((doc) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<span style="cursor:pointer">${doc.fileName}</span>`;
-    li.addEventListener("click", () => {
-      currentDocument = doc.fileName;
-      previewDocument(doc.filePath);
-    });
-    documentList.appendChild(li);
-  });
+  // Iterar sobre cada departamento
+  for (const department in data.documents) {
+    const departmentHeader = document.createElement("h2");
+    departmentHeader.textContent = department; // Nombre del departamento
+    documentList.appendChild(departmentHeader);
+
+    // Iterar sobre cada bloque dentro del departamento
+    for (const block in data.documents[department]) {
+      const blockHeader = document.createElement("h3");
+      blockHeader.textContent = block; // Nombre del bloque
+      documentList.appendChild(blockHeader);
+
+      const ul = document.createElement("ul"); // Lista de documentos del bloque
+
+      data.documents[department][block].forEach((doc) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span style="cursor:pointer">${doc.fileName}</span>`;
+        li.addEventListener("click", () => {
+          currentDocument = doc.fileName;
+          previewDocument(doc.filePath); // Asegúrate de que doc.filePath sea la ruta correcta
+        });
+        ul.appendChild(li); // Añadir documento a la lista
+      });
+
+      documentList.appendChild(ul); // Añadir la lista de documentos al bloque
+    }
+  }
 }
 
 // Previsualizar el documento
 function previewDocument(documentUrl) {
   const pdfViewer = document.getElementById("pdfViewer");
-  pdfViewer.src = documentUrl;
+  pdfViewer.src = documentUrl; // La URL debe ser válida y accesible
   pdfViewer.classList.remove("hidden");
 
   document.getElementById("saveSignature").classList.remove("hidden");
@@ -229,9 +315,27 @@ async function loadSocietyDocuments() {
     document.getElementById("documentsBySociety");
   documentsBySocietyContainer.innerHTML = "";
 
-  data.documents.forEach((doc) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
-    documentsBySocietyContainer.appendChild(li);
-  });
+  // Estructura de documentos
+  for (const department in data.documents) {
+    const departmentHeader = document.createElement("h2");
+    departmentHeader.textContent = department; // Nombre del departamento
+    documentsBySocietyContainer.appendChild(departmentHeader);
+
+    // Iterar sobre cada bloque dentro del departamento
+    for (const block in data.documents[department]) {
+      const blockHeader = document.createElement("h3");
+      blockHeader.textContent = block; // Nombre del bloque
+      documentsBySocietyContainer.appendChild(blockHeader);
+
+      const ul = document.createElement("ul"); // Lista de documentos del bloque
+
+      data.documents[department][block].forEach((doc) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+        ul.appendChild(li); // Añadir documento a la lista
+      });
+
+      documentsBySocietyContainer.appendChild(ul); // Añadir la lista de documentos al bloque
+    }
+  }
 }

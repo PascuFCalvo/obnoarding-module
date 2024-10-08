@@ -11,8 +11,19 @@ const getManagerWorkerDocuments = require("../controllers/docControllers/getMana
 const router = express.Router();
 
 // Rutas para manejar documentos
+router.post("/upload-info", async (req, res) => {
+  // Aquí puedes guardar la información en la sesión o en un estado temporal
+  // Suponiendo que estás usando express-session
+  req.session.societyId = req.body.societyId; // Ejemplo de uso de session, deberás implementar express-session
+  req.session.department = req.body.department;
+  req.session.block = req.body.block;
+
+  res.json({ message: "Información de sociedad y departamento recibida." });
+});
+
+// Ruta para subir el archivo
 router.post(
-  "/upload",
+  "/upload-file",
   uploadController.upload.single("document"),
   uploadController.uploadDocument
 );

@@ -21,8 +21,12 @@
     <!-- Área del Manager -->
     <div id="managerArea" class="hidden">
       <h2>Subir Documento para tu Sociedad</h2>
-      <form id="uploadForm">
+      <form id="uploadForm" enctype="multipart/form-data">
         <input type="file" id="document" name="document" /><br /><br />
+        <p>Asignar formación a un departamento</p>
+        <select id="department" name="department"></select>
+        <p>Asignar formacion a un bloque</p>
+        <select id="block" name="block"></select>
         <button type="submit">Subir Documento</button>
       </form>
 
@@ -55,7 +59,26 @@
       <button id="saveSignature" class="hidden">Guardar Firma</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-    <script src="./script.js"></script>
+    <script>
+      function loadScript(url) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = url;
+          script.onload = () => resolve();
+          script.onerror = () =>
+            reject(new Error(`Error loading script ${url}`));
+          document.head.appendChild(script);
+        });
+      }
+
+      async function loadScripts() {
+        await loadScript(
+          "https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"
+        );
+        await loadScript("./script.js");
+      }
+
+      loadScripts().catch((err) => console.error(err));
+    </script>
   </body>
 </html>

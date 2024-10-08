@@ -1,7 +1,6 @@
-// src/controllers/docControllers/getWorkerDocuments.js
 const fs = require("fs");
 const path = require("path");
-const users = require("../../data/users"); // Asegúrate de que la ruta sea correcta
+const users = require("../../data/users");
 
 function getWorkerDocuments(req, res) {
   const workerId = req.params.workerId;
@@ -11,22 +10,46 @@ function getWorkerDocuments(req, res) {
     return res.status(404).json({ message: "Trabajador no encontrado" });
   }
 
-  // Ajustar la ruta para acceder a la carpeta de documentos de la sociedad
   const societyDocumentsPath = path.join(
     __dirname,
-    `../../uploads/society_${worker.societyId}` // Ajusta para acceder a los documentos de la sociedad
+    `../../../uploads/society_${worker.societyId}`
   );
 
   if (!fs.existsSync(societyDocumentsPath)) {
-    return res.json({ societyDocuments: [] }); // Devuelve un arreglo vacío si no hay documentos
+    return res.json({ documents: [] });
   }
 
-  const documents = fs.readdirSync(societyDocumentsPath).map((file) => ({
-    fileName: file,
-    filePath: `/uploads/society_${worker.societyId}/${file}`,
-  }));
+  const documentsByDepartment = {};
+  const allowedDepartments = [worker.department]; // Asumiendo que el trabajador tiene un campo 'department'
 
-  res.json({ societyDocuments: documents });
+  // Leer las carpetas dentro de la carpeta de la sociedad
+  fs.readdirSync(societyDocumentsPath).forEach((department) => {
+    // Verifica si el departamento es uno de los permitidos
+    if (allowedDepartments.includes(department) || department === "general") {
+      const departmentPath = path.join(societyDocumentsPath, department);
+      if (fs.lstatSync(departmentPath).isDirectory()) {
+        documentsByDepartment[department] = {};
+
+        // Leer los bloques dentro de cada departamento
+        fs.readdirSync(departmentPath).forEach((block) => {
+          const blockPath = path.join(departmentPath, block);
+          if (fs.lstatSync(blockPath).isDirectory()) {
+            documentsByDepartment[department][block] = [];
+
+            // Leer los archivos dentro de cada bloque
+            fs.readdirSync(blockPath).forEach((file) => {
+              documentsByDepartment[department][block].push({
+                fileName: file,
+                filePath: `/uploads/society_${worker.societyId}/${department}/${block}/${file}`,
+              });
+            });
+          }
+        });
+      }
+    }
+  });
+
+  res.json({ documents: documentsByDepartment });
 }
 
 module.exports = getWorkerDocuments;

@@ -14,7 +14,7 @@ function getSignedDocuments(req, res) {
   // Ajustar la ruta para acceder a la carpeta de documentos firmados
   const signedDocsPath = path.join(
     __dirname,
-    `../../uploads/society_${worker.societyId}/worker_${workerId}`
+    `../../../uploads/society_${worker.societyId}/worker_${workerId}`
   );
 
   // Verificar si la carpeta de documentos firmados existe

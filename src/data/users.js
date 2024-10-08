@@ -7,6 +7,7 @@ const users = [
     password: "1234",
     role: "worker",
     societyId: 1,
+    department : "IT"
   },
   {
     id: 2,
@@ -15,6 +16,7 @@ const users = [
     password: "1234",
     role: "worker",
     societyId: 1,
+    department : "CS"
   },
   {
     id: 3, // Corrige el ID, no puede haber dos con el mismo ID

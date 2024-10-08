@@ -4,6 +4,7 @@ const getCoursesSociety = require("../controllers/workerControllers/getCoursesSo
 const getManagerWorkerList = require("../controllers/workerControllers/getManagerWorkerList");
 const getSignedDocuments = require("../controllers/docControllers/getSignedDocuments");
 const getManagerWorkerDocuments = require("../controllers/docControllers/getManagerWorkerDocuments");
+const getDepartments = require("../controllers/workerControllers/getWorkerDepartments");
 
 const router = express.Router();
 
@@ -14,5 +15,5 @@ router.get(
   "/manager/worker-documents/:managerId/:workerId",
   getManagerWorkerDocuments
 );
-
+router.get("/workerDepartments", getDepartments);
 module.exports = router;
