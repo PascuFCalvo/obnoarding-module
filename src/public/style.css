@@ -2,15 +2,15 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f0f0f0;
+  background-color: #e6f0fa; /* Fondo azul muy claro */
   color: #333;
 }
 
 h1,
 h2,
 h3 {
-  color: #333;
-  text-align: center;
+  color: #0056b3; /* Azul oscuro */
+  text-align: start;
 }
 
 form {
@@ -33,14 +33,14 @@ input[type="text"] {
   width: 80%;
   max-width: 300px;
   margin-bottom: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid #99c2e6; /* Borde azul claro */
   border-radius: 4px;
 }
 
 button {
   padding: 10px 20px;
   border: none;
-  background-color: #4caf50;
+  background-color: #007bff; /* Azul principal */
   color: white;
   font-size: 16px;
   cursor: pointer;
@@ -48,7 +48,7 @@ button {
 }
 
 button:hover {
-  background-color: #45a049;
+  background-color: #0056b3; /* Azul oscuro */
 }
 
 .hidden {
@@ -66,18 +66,20 @@ button:hover {
 }
 
 #signaturePad {
-  border: 1px solid black;
+  border: 1px solid #007bff; /* Borde azul */
   width: 100%;
   max-width: 300px;
   height: 150px;
   margin: 20px auto;
+  border-radius: 4px;
 }
 
 iframe {
   width: 100%;
   height: 600px;
-  border: 1px solid black;
+  border: 1px solid #007bff; /* Borde azul */
   margin: 20px 0;
+  border-radius: 4px;
 }
 
 ul,
@@ -89,15 +91,15 @@ div {
 ul li,
 div li {
   padding: 8px;
-  background-color: #f9f9f9;
+  background-color: #f0f8ff; /* Azul muy claro */
   margin-bottom: 5px;
-  border: 1px solid #ddd;
+  border: 1px solid #cce5ff; /* Borde azul claro */
   border-radius: 4px;
 }
 
 ul li a {
   text-decoration: none;
-  color: #333;
+  color: #007bff; /* Azul principal */
 }
 
 ul li a:hover {
@@ -109,14 +111,97 @@ ul li a:hover {
 #workerList {
   margin-top: 20px;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #cce5ff; /* Borde azul claro */
   border-radius: 8px;
-  background-color: #fff;
+  background-color: #ffffff;
 }
 
 .signed {
-  color: green;
+  color: #0056b3; /* Azul oscuro */
   font-weight: bold;
   display: inline-block;
   margin-left: 10px;
+}
+
+#uploadArea {
+  width: 100%;
+  background-color: #cce5ff; /* Azul claro */
+  display: flex;
+  margin: 1em;
+  border-radius: 8px;
+}
+
+#inputDoc {
+  background-color: #b3d9ff; /* Azul suave */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+  margin: 1em;
+  width: 50%;
+  border-radius: 8px;
+}
+
+#asignOptions {
+  background-color: #99c2e6; /* Azul suave */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1em;
+  margin: 1em;
+  width: 50%;
+  border-radius: 8px;
+}
+
+#asignOptions p {
+  font-size: 12px;
+}
+
+/* Contenedor de cada departamento */
+.departmentContainer {
+  background-color: #ffffff;
+  border: 1px solid #cce5ff; /* Borde azul claro */
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+/* Encabezado del departamento */
+.departmentHeader {
+  font-size: 1.5em;
+  color: #0056b3; /* Azul oscuro */
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #cce5ff; /* Borde azul claro */
+}
+
+/* Encabezado de cada bloque */
+.blockHeader {
+  font-size: 1.2em;
+  color: #007bff; /* Azul principal */
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+/* Lista de documentos */
+.departmentContainer ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Elementos de la lista de documentos */
+.departmentContainer li {
+  margin-bottom: 8px;
+}
+
+/* Enlaces de los documentos */
+.departmentContainer a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.departmentContainer a:hover {
+  text-decoration: underline;
 }

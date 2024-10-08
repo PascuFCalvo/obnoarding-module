@@ -3,11 +3,12 @@ let currentDocument = null;
 const signaturePad = new SignaturePad(document.getElementById("signaturePad"));
 
 function resetUI() {
-  document.getElementById("loginForm").reset();
+  document.getElementById("loginForm").classList.remove("hidden");
   document.getElementById("managerArea").classList.add("hidden");
   document.getElementById("workerArea").classList.add("hidden");
   document.getElementById("pdfViewer").classList.add("hidden");
   document.getElementById("saveSignature").classList.add("hidden");
+  document.getElementById("logoutBtn").classList.add("hidden");
   signaturePad.clear();
   currentUser = null;
   currentDocument = null;
@@ -33,6 +34,16 @@ async function loadDepartments() {
     departmentSelect.appendChild(option);
   });
 }
+
+async function clearSignature() {
+  let name = document.getElementById("name");
+  name.value = "";
+  let dni = document.getElementById("DNI");
+  dni.value = "";
+  signaturePad.clear();
+}
+let clearSignatureButton = document.getElementById("clearSignature");
+clearSignatureButton.addEventListener("click", clearSignature);
 
 // Cargar bloques
 async function loadBlocks() {
@@ -69,6 +80,7 @@ document
     if (response.ok) {
       currentUser = data.user;
       alert(`Login exitoso. Bienvenido, ${currentUser.name}`);
+      document.getElementById("loginForm").classList.add("hidden");
       document.getElementById("logoutBtn").classList.remove("hidden");
 
       if (currentUser.role === "manager") {
@@ -175,6 +187,8 @@ async function loadWorkerDocuments(workerId) {
   );
   const data = await response.json();
   console.log(data); // Para depurar y ver la respuesta
+
+  document.getElementById("workerDocuments").classList.remove("hidden");
 
   const documentsByWorkerContainer =
     document.getElementById("documentsByWorker");
@@ -376,15 +390,22 @@ async function loadSocietyDocuments() {
 
   // Estructura de documentos
   for (const department in data.documents) {
+    const departmentContainer = document.createElement("div");
+    departmentContainer.classList.add("departmentContainer");
+
     const departmentHeader = document.createElement("h2");
+    departmentHeader.classList.add("departmentHeader");
     departmentHeader.textContent = department; // Nombre del departamento
-    documentsBySocietyContainer.appendChild(departmentHeader);
+
+    departmentContainer.appendChild(departmentHeader); // Añadir el encabezado al contenedor del departamento
 
     // Iterar sobre cada bloque dentro del departamento
     for (const block in data.documents[department]) {
       const blockHeader = document.createElement("h3");
+      blockHeader.classList.add("blockHeader");
       blockHeader.textContent = block; // Nombre del bloque
-      documentsBySocietyContainer.appendChild(blockHeader);
+
+      departmentContainer.appendChild(blockHeader); // Añadir el encabezado del bloque al contenedor del departamento
 
       const ul = document.createElement("ul"); // Lista de documentos del bloque
 
@@ -394,7 +415,9 @@ async function loadSocietyDocuments() {
         ul.appendChild(li); // Añadir documento a la lista
       });
 
-      documentsBySocietyContainer.appendChild(ul); // Añadir la lista de documentos al bloque
+      departmentContainer.appendChild(ul); // Añadir la lista de documentos al bloque en el contenedor del departamento
     }
+
+    documentsBySocietyContainer.appendChild(departmentContainer); // Añadir el contenedor del departamento al contenedor principal
   }
 }

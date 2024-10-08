@@ -20,24 +20,33 @@
 
     <!-- Área del Manager -->
     <div id="managerArea" class="hidden">
-      <h2>Subir Documento para tu Sociedad</h2>
+      <h2>GESTIONAR DOCUMENTACION</h2>
       <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="document" name="document" /><br /><br />
-        <p>Asignar formación a un departamento</p>
-        <select id="department" name="department"></select>
-        <p>Asignar formacion a un bloque</p>
-        <select id="block" name="block"></select>
+        <div id="uploadArea">
+          <div id="inputDoc">
+            <input type="file" id="document" name="document" /><br /><br />
+          </div>
+          <div id="asignOptions">
+            <p>Asignar formación a un departamento</p>
+            <select id="department" name="department"></select>
+            <p>Asignar formacion a un bloque</p>
+            <select id="block" name="block"></select>
+          </div>
+        </div>
+
         <button type="submit">Subir Documento</button>
       </form>
 
-      <h2>Documentos de la Sociedad</h2>
+      <h2>DOCUMENTOS</h2>
       <div id="documentsBySociety"></div>
 
-      <h2>Trabajadores</h2>
+      <h2>EMPLEADOS</h2>
       <div id="workerList"></div>
 
-      <h2>Documentación de los Trabajadores</h2>
-      <div id="documentsByWorker"></div>
+      <div id="workerDocuments" class="hidden">
+        <h2>Documentación de los Trabajadores</h2>
+        <div id="documentsByWorker"></div>
+      </div>
     </div>
 
     <!-- Área del Trabajador -->
