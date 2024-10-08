@@ -31,7 +31,10 @@ router.get("/society-documents/:societyId", getSocietyDocuments);
 router.get("/manager/society-documents/:managerId", getManagerDocuments);
 router.get("/documents/:workerId", getWorkerDocuments);
 router.get("/worker/signed-documents/:workerId", getSignedDocuments);
-router.get("/manager/worker-documents/:workerId", getManagerWorkerDocuments);
-router.post("/sign-document", signDocument);
+router.get(
+  "/manager/worker-documents/:managerId/:workerId",
+  getSignedDocuments
+);
+router.post("/sign-document", getManagerWorkerDocuments);
 
 module.exports = router;

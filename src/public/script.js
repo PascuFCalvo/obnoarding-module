@@ -168,21 +168,66 @@ async function loadWorkerList() {
 }
 
 // Cargar documentos firmados por el trabajador seleccionado (manager)
+// Cargar documentos firmados por el trabajador seleccionado (manager)
 async function loadWorkerDocuments(workerId) {
   const response = await fetch(
     `http://localhost:3000/workers/manager/worker-documents/${currentUser.id}/${workerId}`
   );
   const data = await response.json();
+  console.log(data); // Para depurar y ver la respuesta
 
   const documentsByWorkerContainer =
     document.getElementById("documentsByWorker");
-  documentsByWorkerContainer.innerHTML = "";
+  documentsByWorkerContainer.innerHTML = ""; // Limpiar contenido anterior
+
+  // Verificar si hay documentos
+  if (!data.documents || data.documents.length === 0) {
+    documentsByWorkerContainer.innerHTML =
+      "<p>No hay documentos disponibles.</p>";
+    return;
+  }
+
+  // Agrupar documentos por departamento y bloque
+  const groupedDocuments = {};
 
   data.documents.forEach((doc) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
-    documentsByWorkerContainer.appendChild(li);
+    const { department, block } = doc; // Asegúrate de que el objeto doc tiene estas propiedades
+
+    // Asegurarse de que la estructura existe
+    if (!groupedDocuments[department]) {
+      groupedDocuments[department] = {};
+    }
+    if (!groupedDocuments[department][block]) {
+      groupedDocuments[department][block] = [];
+    }
+
+    // Añadir el documento al grupo correspondiente
+    groupedDocuments[department][block].push(doc);
   });
+
+  // Iterar sobre cada departamento en la estructura agrupada
+  for (const department in groupedDocuments) {
+    const departmentHeader = document.createElement("h2");
+    departmentHeader.textContent = department; // Nombre del departamento
+    documentsByWorkerContainer.appendChild(departmentHeader);
+
+    // Iterar sobre cada bloque dentro del departamento
+    for (const block in groupedDocuments[department]) {
+      const blockHeader = document.createElement("h3");
+      blockHeader.textContent = block; // Nombre del bloque
+      documentsByWorkerContainer.appendChild(blockHeader);
+
+      const ul = document.createElement("ul"); // Lista de documentos del bloque
+
+      groupedDocuments[department][block].forEach((doc) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+        ul.appendChild(li); // Añadir documento a la lista
+      });
+
+      documentsByWorkerContainer.appendChild(ul); // Añadir la lista de documentos al bloque
+    }
+  }
 }
 
 // Cargar documentos subidos por el manager para el trabajador
@@ -260,48 +305,62 @@ document
       date: new Date().toLocaleDateString(),
     };
 
-    try {
-      const response = await fetch(
-        "http://localhost:3000/documents/sign-document",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        alert("Documento firmado correctamente.");
-        document.getElementById("pdfViewer").src = data.filePath;
-
-        document.getElementById("saveSignature").classList.add("hidden");
-        signaturePad.clear();
-        loadDocumentsForWorker();
-        loadSignedDocumentsForWorker();
-      } else {
-        alert("Error al firmar el documento.");
+    const response = await fetch(
+      "http://localhost:3000/documents/sign-document",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       }
-    } catch (error) {
-      alert("Error de red al firmar el documento.");
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      alert("Documento firmado correctamente.");
+      document.getElementById("pdfViewer").src = data.filePath; // Muestra el documento firmado
+
+      document.getElementById("saveSignature").classList.add("hidden");
+      signaturePad.clear();
+      loadDocumentsForWorker(); // Actualiza la lista de documentos
+      loadSignedDocumentsForWorker(); // Actualiza la lista de documentos firmados
+    } else {
+      alert("Error al firmar el documento.");
     }
   });
 
 // Cargar documentos firmados por el trabajador
 async function loadSignedDocumentsForWorker() {
   const response = await fetch(
-    `http://localhost:3000/workers/worker/signed-documents/${currentUser.id}`
+    `http://localhost:3000/documents/worker/signed-documents/${currentUser.id}`
   );
   const data = await response.json();
 
   const signedDocumentList = document.getElementById("signedDocumentList");
-  signedDocumentList.innerHTML = "";
+  signedDocumentList.innerHTML = ""; // Limpiar la lista de documentos firmados
 
-  data.signedDocuments.forEach((doc) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
-    signedDocumentList.appendChild(li);
-  });
+  // Iterar sobre cada departamento en la respuesta
+  for (const department in data.signedDocuments) {
+    const departmentHeader = document.createElement("h2");
+    departmentHeader.textContent = department; // Nombre del departamento
+    signedDocumentList.appendChild(departmentHeader);
+
+    // Iterar sobre cada bloque dentro del departamento
+    for (const block in data.signedDocuments[department]) {
+      const blockHeader = document.createElement("h3");
+      blockHeader.textContent = block; // Nombre del bloque
+      signedDocumentList.appendChild(blockHeader);
+
+      const ul = document.createElement("ul"); // Lista de documentos del bloque
+
+      data.signedDocuments[department][block].forEach((doc) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+        ul.appendChild(li); // Añadir documento a la lista
+      });
+
+      signedDocumentList.appendChild(ul); // Añadir la lista de documentos al bloque
+    }
+  }
 }
 
 // Cargar documentos subidos por el manager para mostrar en "Documentos de la Sociedad"
