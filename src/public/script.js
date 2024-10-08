@@ -1,3 +1,5 @@
+console.log("script.js ha sido cargado correctamente");
+
 let currentUser = null;
 let currentDocument = null;
 const signaturePad = new SignaturePad(document.getElementById("signaturePad"));
@@ -34,6 +36,25 @@ async function loadDepartments() {
     departmentSelect.appendChild(option);
   });
 }
+const buttonVerEmpleados = document.getElementById("toggleWorkers");
+
+async function toggleWorkers() {
+  let workerList = document.getElementById("workerList");
+  let workerDocuments = document.getElementById("workerDocuments");
+  let buttonVerEmpleados = document.getElementById("toggleWorkers"); // Asegúrate de definir el botón aquí
+
+  if (workerList.style.display === "none" || !workerList.style.display) {
+    workerList.style.display = "block";
+    workerDocuments.style.display = "block";
+    buttonVerEmpleados.innerHTML = "Ocultar empleados";
+  } else {
+    workerList.style.display = "none";
+    workerDocuments.style.display = "none";
+    buttonVerEmpleados.innerHTML = "Ver empleados";
+  }
+}
+
+buttonVerEmpleados.addEventListener("click", toggleWorkers);
 
 async function clearSignature() {
   let name = document.getElementById("name");
@@ -85,9 +106,9 @@ document
 
       if (currentUser.role === "manager") {
         document.getElementById("managerArea").classList.remove("hidden");
-        loadDepartments(); // Cargar departamentos al iniciar sesión como manager
-        loadBlocks(); // Cargar bloques al iniciar sesión como manager
-        loadWorkerList();
+        loadDepartments();
+        loadBlocks();
+        loadWorkerList(); // Asegúrate de que el elemento "workerList" exista en el DOM
         loadSocietyDocuments();
       } else if (currentUser.role === "worker") {
         document.getElementById("workerArea").classList.remove("hidden");
@@ -160,26 +181,36 @@ document
 
 // Cargar lista de trabajadores para el manager
 async function loadWorkerList() {
-  const response = await fetch(
-    `http://localhost:3000/workers/manager/worker-list/${currentUser.id}`
-  );
-  const data = await response.json();
-
   const workerList = document.getElementById("workerList");
-  workerList.innerHTML = "";
 
-  data.workers.forEach((worker) => {
-    const workerItem = document.createElement("div");
-    workerItem.innerHTML = `<strong>${worker.name}</strong>`;
-    workerItem.style.cursor = "pointer";
+  // Verifica que el elemento exista antes de continuar
+  if (!workerList) {
+    console.error("No se encuentra el elemento 'workerList'.");
+    return;
+  }
 
-    workerItem.addEventListener("click", () => loadWorkerDocuments(worker.id));
+  try {
+    const response = await fetch(
+      `http://localhost:3000/workers/manager/worker-list/${currentUser.id}`
+    );
+    const data = await response.json();
 
-    workerList.appendChild(workerItem);
-  });
+    workerList.innerHTML = "";
+
+    data.workers.forEach((worker) => {
+      const workerItem = document.createElement("div");
+      workerItem.innerHTML = `<strong>${worker.name}</strong>`;
+      workerItem.style.cursor = "pointer";
+      workerItem.addEventListener("click", () =>
+        loadWorkerDocuments(worker.id)
+      );
+      workerList.appendChild(workerItem);
+    });
+  } catch (error) {
+    console.error("Error al cargar la lista de trabajadores:", error);
+  }
 }
 
-// Cargar documentos firmados por el trabajador seleccionado (manager)
 // Cargar documentos firmados por el trabajador seleccionado (manager)
 async function loadWorkerDocuments(workerId) {
   const response = await fetch(
