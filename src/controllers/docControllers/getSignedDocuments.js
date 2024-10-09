@@ -19,7 +19,6 @@ function getSignedDocuments(req, res) {
 
   // Verificar si la carpeta de documentos firmados existe
   if (!fs.existsSync(signedDocsPath)) {
-    console.log("No existe la carpeta de documentos firmados."); // Mensaje de depuración
     return res.json({ signedDocuments: [] }); // Si no existe, devolver lista vacía
   }
 
@@ -28,7 +27,6 @@ function getSignedDocuments(req, res) {
   // Leer los archivos dentro de la carpeta de documentos firmados del trabajador
   fs.readdirSync(signedDocsPath).forEach((file) => {
     const filePath = path.join(signedDocsPath, file);
-    console.log("Archivo encontrado:", file); // Para depuración
     if (fs.lstatSync(filePath).isFile()) {
       // Extraer información para construir la estructura
       const [department, block] = file.split("_"); // Asumiendo que el nombre del archivo contiene información estructurada
@@ -48,7 +46,6 @@ function getSignedDocuments(req, res) {
     }
   });
 
-  console.log("Documentos firmados estructurados:", signedDocuments); // Para depuración
   res.json({ signedDocuments });
 }
 

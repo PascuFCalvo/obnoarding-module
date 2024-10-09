@@ -10,9 +10,6 @@ const storage = multer.diskStorage({
     const department = req.session.department || "general"; // Obtener el departamento de la sesión
     const block = req.session.block; // Obtener el bloque de la sesión
 
-    console.log("department", department); // Para depuración
-    console.log("societyId", societyId);
-    console.log("bloque", block); // Para depuración
 
     // Si el manager elige un departamento al que asignar el documento
     if (department && department !== "general") {

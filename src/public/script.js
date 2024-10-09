@@ -1,4 +1,3 @@
-console.log("script.js ha sido cargado correctamente");
 
 let currentUser = null;
 let currentDocument = null;
@@ -232,7 +231,6 @@ async function loadWorkerDocuments(workerId) {
   }
 
   const unsignedData = await unsignedResponse.json();
-  console.log("Documentos no firmados recibidos:", unsignedData); // Para depurar
 
   // Obtener documentos firmados
   const signedResponse = await fetch(
@@ -248,7 +246,6 @@ async function loadWorkerDocuments(workerId) {
   }
 
   const signedData = await signedResponse.json();
-  console.log("Documentos firmados recibidos:", signedData); // Para depurar
 
   const documentsByWorkerContainer =
     document.getElementById("documentsByWorker");

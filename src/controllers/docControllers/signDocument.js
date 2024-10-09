@@ -8,7 +8,6 @@ async function signDocument(req, res) {
   const { workerId, documentName, signatureDataUrl, name, DNI, date } =
     req.body;
 
-  console.log("Request Body:", req.body); // Para verificar la información recibida
 
   // Buscar el trabajador
   const worker = users.find((u) => u.id == workerId && u.role === "worker");
@@ -16,7 +15,6 @@ async function signDocument(req, res) {
     console.error("Trabajador no encontrado:", workerId); // Mensaje de error
     return res.status(404).json({ message: "Trabajador no encontrado" });
   }
-  console.log("Trabajador encontrado:", worker); // Información del trabajador
 
   // Ruta base de la sociedad
   const societyBasePath = path.join(
@@ -48,12 +46,10 @@ async function signDocument(req, res) {
     return res.status(404).json({ message: "Documento no encontrado" });
   }
 
-  console.log("Ruta del documento:", documentPath); // Para verificar la ruta del documento
 
   // Verificar si el documento es un PDF
   const fileExtension = path.extname(documentName).toLowerCase();
   if (fileExtension !== ".pdf") {
-    console.log("El archivo no es un PDF, se creará un justificante.");
 
     // Crear un PDF justificante
     const justificationDoc = await PDFDocument.create();
@@ -76,7 +72,7 @@ async function signDocument(req, res) {
 
     // Guardar el justificante
     const justificationFileName =
-      documentName.replace(fileExtension, "") + "_justificante.pdf";
+      "signed_" + documentName.replace(fileExtension, "") + "_justificante.pdf";
     const justificationFilePath = path.join(
       __dirname,
       `../../../uploads/society_${worker.societyId}/worker_${workerId}`,
@@ -86,12 +82,10 @@ async function signDocument(req, res) {
     // Crear la carpeta del trabajador si no existe
     if (!fs.existsSync(path.dirname(justificationFilePath))) {
       fs.mkdirSync(path.dirname(justificationFilePath), { recursive: true });
-      console.log("Directorio creado:", path.dirname(justificationFilePath)); // Confirmación de creación de directorio
     }
 
     const justificationPdfBytes = await justificationDoc.save();
     fs.writeFileSync(justificationFilePath, justificationPdfBytes);
-    console.log("Documento justificante guardado correctamente");
 
     // Devolver la ruta pública del justificante
     const publicUrl = `/uploads/society_${worker.societyId}/worker_${workerId}/${justificationFileName}`;
@@ -104,7 +98,6 @@ async function signDocument(req, res) {
   // Si es un PDF, proceder con la firma
   const pdfBytes = fs.readFileSync(documentPath);
   const pdfDoc = await PDFDocument.load(pdfBytes);
-  console.log("Documento PDF cargado correctamente"); // Confirmación de carga
 
   // Insertar la firma en el PDF
   const pngImage = await pdfDoc.embedPng(
@@ -125,17 +118,14 @@ async function signDocument(req, res) {
     signedDirectoryPath,
     `signed_${documentName}`
   );
-  console.log("Ruta del documento firmado:", signedFilePath); // Ruta para guardar el documento firmado
 
   // Crear la carpeta del trabajador si no existe
   if (!fs.existsSync(signedDirectoryPath)) {
     fs.mkdirSync(signedDirectoryPath, { recursive: true });
-    console.log("Directorio creado:", signedDirectoryPath); // Confirmación de creación de directorio
   }
 
   const signedPdfBytes = await pdfDoc.save();
   fs.writeFileSync(signedFilePath, signedPdfBytes);
-  console.log("Documento firmado guardado correctamente"); // Confirmación de guardado
 
   // Devolver la ruta pública del documento firmado
   const publicUrl = `/uploads/society_${worker.societyId}/worker_${workerId}/signed_${documentName}`;
