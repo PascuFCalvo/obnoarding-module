@@ -82,6 +82,10 @@ iframe {
   border-radius: 4px;
 }
 
+li p {
+  margin: 0;
+}
+
 ul,
 div {
   list-style: none;
@@ -204,4 +208,17 @@ ul li a:hover {
 
 .departmentContainer a:hover {
   text-decoration: underline;
+}
+
+#titlePreviewDocument {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2em;
+
+  & button {
+    background-color: lightcoral;
+    font-size: 10px;
+    padding: 4px;
+  }
 }

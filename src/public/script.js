@@ -82,6 +82,8 @@ async function loadBlocks() {
       blockSelect.appendChild(option); // Añadir la opción al select
     });
   }
+
+  return data.blocks;
 }
 
 document
@@ -108,7 +110,7 @@ document
         document.getElementById("managerArea").classList.remove("hidden");
         loadDepartments();
         loadBlocks();
-        loadWorkerList(); // Asegúrate de que el elemento "workerList" exista en el DOM
+        loadWorkerList();
         loadSocietyDocuments();
       } else if (currentUser.role === "worker") {
         document.getElementById("workerArea").classList.remove("hidden");
@@ -201,9 +203,12 @@ async function loadWorkerList() {
       const workerItem = document.createElement("div");
       workerItem.innerHTML = `<strong>${worker.name}</strong>`;
       workerItem.style.cursor = "pointer";
-      workerItem.addEventListener("click", () =>
-        loadWorkerDocuments(worker.id)
-      );
+      let documentsByWorker = document.getElementById("documentsByWorker");
+      workerItem.addEventListener("click", () => {
+        documentsByWorker.classList.remove("hidden");
+        loadWorkerDocuments(worker.id);
+      });
+
       workerList.appendChild(workerItem);
     });
   } catch (error) {
@@ -218,8 +223,6 @@ async function loadWorkerDocuments(workerId) {
   );
   const data = await response.json();
   console.log(data); // Para depurar y ver la respuesta
-
-  document.getElementById("workerDocuments").classList.remove("hidden");
 
   const documentsByWorkerContainer =
     document.getElementById("documentsByWorker");
@@ -266,7 +269,7 @@ async function loadWorkerDocuments(workerId) {
 
       groupedDocuments[department][block].forEach((doc) => {
         const li = document.createElement("li");
-        li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+        li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName} </a>`;
         ul.appendChild(li); // Añadir documento a la lista
       });
 
@@ -303,6 +306,10 @@ async function loadDocumentsForWorker() {
         const li = document.createElement("li");
         li.innerHTML = `<span style="cursor:pointer">${doc.fileName}</span>`;
         li.addEventListener("click", () => {
+          const signDocumentContainer = document.getElementById(
+            "signDocumentContainer"
+          );
+          signDocumentContainer.classList.remove("hidden");
           currentDocument = doc.fileName;
           previewDocument(doc.filePath); // Asegúrate de que doc.filePath sea la ruta correcta
         });
@@ -313,6 +320,11 @@ async function loadDocumentsForWorker() {
     }
   }
 }
+
+let buttonClosePreview = document.getElementById("closePreview");
+buttonClosePreview.addEventListener("click", function () {
+  document.getElementById("signDocumentContainer").classList.add("hidden");
+});
 
 // Previsualizar el documento
 function previewDocument(documentUrl) {
@@ -385,22 +397,25 @@ async function loadSignedDocumentsForWorker() {
 
   // Iterar sobre cada departamento en la respuesta
   for (const department in data.signedDocuments) {
-    const departmentHeader = document.createElement("h2");
-    departmentHeader.textContent = department; // Nombre del departamento
-    signedDocumentList.appendChild(departmentHeader);
-
     // Iterar sobre cada bloque dentro del departamento
     for (const block in data.signedDocuments[department]) {
-      const blockHeader = document.createElement("h3");
-      blockHeader.textContent = block; // Nombre del bloque
-      signedDocumentList.appendChild(blockHeader);
+      // const blockHeader = document.createElement("h3");
+      // blockHeader.textContent = block; // Nombre del bloque
+      // signedDocumentList.appendChild(blockHeader);
 
       const ul = document.createElement("ul"); // Lista de documentos del bloque
 
       data.signedDocuments[department][block].forEach((doc) => {
         const li = document.createElement("li");
+        const check = document.createElement("p");
+        check.innerHTML = `✅`;
+
         li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+        li.appendChild(check);
         ul.appendChild(li); // Añadir documento a la lista
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
       });
 
       signedDocumentList.appendChild(ul); // Añadir la lista de documentos al bloque

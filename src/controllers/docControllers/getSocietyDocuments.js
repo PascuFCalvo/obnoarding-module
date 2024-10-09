@@ -1,6 +1,10 @@
-// src/controllers/docControllers/getSocietyDocuments.js
 const fs = require("fs");
 const path = require("path");
+const blocks = require("../../data/blocks"); // Asegúrate de que este archivo contenga los bloques válidos
+
+// Obtener nombres de los bloques válidos y añadir "general" manualmente
+const validBlocks = blocks.map((block) => block.name);
+validBlocks.push("general");
 
 function getSocietyDocuments(req, res) {
   const societyId = req.params.societyId;
@@ -23,21 +27,28 @@ function getSocietyDocuments(req, res) {
       const departmentPath = path.join(societyDocumentsPath, department);
       const blocks = fs
         .readdirSync(departmentPath)
-        .filter((block) =>
-          fs.statSync(path.join(departmentPath, block)).isDirectory()
+        .filter(
+          (block) =>
+            fs.statSync(path.join(departmentPath, block)).isDirectory() &&
+            validBlocks.includes(block) // Verifica si el bloque es válido
         )
         .reduce((blockAcc, block) => {
           const blockPath = path.join(departmentPath, block);
-          const files = fs.readdirSync(blockPath).map((file) => ({
-            fileName: file,
-            filePath: `/uploads/society_${societyId}/${department}/${block}/${file}`,
-          }));
+          const files = fs
+            .readdirSync(blockPath)
+            .filter((file) => fs.statSync(path.join(blockPath, file)).isFile()) // Verifica que sean archivos
+            .map((file) => ({
+              fileName: file,
+              filePath: `/uploads/society_${societyId}/${department}/${block}/${file}`,
+            }));
 
           blockAcc[block] = files; // Asigna archivos al bloque correspondiente
           return blockAcc;
         }, {});
 
-      acc[department] = blocks; // Asigna bloques al departamento correspondiente
+      if (Object.keys(blocks).length > 0) {
+        acc[department] = blocks; // Solo añadir si hay bloques con archivos
+      }
       return acc;
     }, {});
 

@@ -45,8 +45,9 @@
       <div id="workerList" class="hidden"></div>
 
       <div id="workerDocuments" class="hidden">
-        <h2>Documentación de los Trabajadores</h2>
-        <div id="documentsByWorker"></div>
+        <div id="documentsByWorker" class="hidden">
+          <h2>Documentos ya firmados</h2>
+        </div>
       </div>
     </div>
 
@@ -54,19 +55,22 @@
     <div id="workerArea" class="hidden">
       <h2>Tus Documentos</h2>
       <ul id="documentList"></ul>
-
       <h3>Mis Documentos Firmados</h3>
       <ul id="signedDocumentList"></ul>
 
-      <h3>Previsualización del Documento</h3>
-      <iframe id="pdfViewer" class="hidden"></iframe>
-
-      <h3>Firmar Documento</h3>
-      <canvas id="signaturePad"></canvas><br />
-      <input id="name" type="text" placeholder="Nombre" /><br />
-      <input id="DNI" type="text" placeholder="DNI" /><br />
-      <button id="clearSignature">Limpiar Firma</button>
-      <button id="saveSignature" class="hidden">Guardar Firma</button>
+      <div id="signDocumentContainer" class="hidden">
+        <div id="titlePreviewDocument">
+          <h3>Previsualización del Documento</h3>
+          <button id="closePreview">❌</button>
+        </div>
+        <iframe id="pdfViewer" class="hidden"></iframe>
+        <h3>Firmar Documento</h3>
+        <canvas id="signaturePad"></canvas><br />
+        <input id="name" type="text" placeholder="Nombre" /><br />
+        <input id="DNI" type="text" placeholder="DNI" /><br />
+        <button id="clearSignature">Limpiar Firma</button>
+        <button id="saveSignature" class="hidden">Guardar Firma</button>
+      </div>
     </div>
 
     <script>

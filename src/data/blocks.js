@@ -2,19 +2,19 @@
 const blocks = [
   {
     id: 1,
-    name: "presentacion",
+    name: "Bloque_1_Presentacion",
   },
   {
     id: 2,
-    name: "documentacion inicial",
+    name: "Bloque_2_Documentacion inicial",
   },
   {
     id: 3,
-    name: "formacion", // Corregido de 'mame' a 'name'
+    name: "Bloque_3_Formacion obligatoria", // Corregido de 'mame' a 'name'
   },
   {
     id: 4,
-    name: "varios",
+    name: "Bloque_4_Varios",
   },
 ];
 
