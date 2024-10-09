@@ -50,7 +50,58 @@ async function signDocument(req, res) {
 
   console.log("Ruta del documento:", documentPath); // Para verificar la ruta del documento
 
-  // Cargar el documento PDF
+  // Verificar si el documento es un PDF
+  const fileExtension = path.extname(documentName).toLowerCase();
+  if (fileExtension !== ".pdf") {
+    console.log("El archivo no es un PDF, se creará un justificante.");
+
+    // Crear un PDF justificante
+    const justificationDoc = await PDFDocument.create();
+    const page = justificationDoc.addPage([600, 400]);
+    page.drawText(`Justificante de visualización`, { x: 50, y: 350, size: 24 });
+    page.drawText(`Has visualizado el video: ${documentName}`, {
+      x: 50,
+      y: 300,
+      size: 16,
+    });
+    page.drawText(`Firmado por: ${name}`, { x: 50, y: 250, size: 16 });
+    page.drawText(`DNI: ${DNI}`, { x: 50, y: 230, size: 16 });
+    page.drawText(`Fecha: ${date}`, { x: 50, y: 210, size: 16 });
+
+    // Insertar la firma en el justificante
+    const pngImage = await justificationDoc.embedPng(
+      signatureDataUrl.replace(/^data:image\/png;base64,/, "")
+    );
+    page.drawImage(pngImage, { x: 50, y: 150, width: 200, height: 50 });
+
+    // Guardar el justificante
+    const justificationFileName =
+      documentName.replace(fileExtension, "") + "_justificante.pdf";
+    const justificationFilePath = path.join(
+      __dirname,
+      `../../../uploads/society_${worker.societyId}/worker_${workerId}`,
+      justificationFileName
+    );
+
+    // Crear la carpeta del trabajador si no existe
+    if (!fs.existsSync(path.dirname(justificationFilePath))) {
+      fs.mkdirSync(path.dirname(justificationFilePath), { recursive: true });
+      console.log("Directorio creado:", path.dirname(justificationFilePath)); // Confirmación de creación de directorio
+    }
+
+    const justificationPdfBytes = await justificationDoc.save();
+    fs.writeFileSync(justificationFilePath, justificationPdfBytes);
+    console.log("Documento justificante guardado correctamente");
+
+    // Devolver la ruta pública del justificante
+    const publicUrl = `/uploads/society_${worker.societyId}/worker_${workerId}/${justificationFileName}`;
+    return res.json({
+      message: "Documento justificante creado correctamente",
+      filePath: publicUrl,
+    });
+  }
+
+  // Si es un PDF, proceder con la firma
   const pdfBytes = fs.readFileSync(documentPath);
   const pdfDoc = await PDFDocument.load(pdfBytes);
   console.log("Documento PDF cargado correctamente"); // Confirmación de carga

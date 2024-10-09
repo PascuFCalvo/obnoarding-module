@@ -6,9 +6,20 @@ body {
   color: #333;
 }
 
-h1,
-h2,
+h1 {
+  font-size: 1.5em; /* Tamaño reducido para h1 */
+  color: #0056b3; /* Azul oscuro */
+  text-align: start;
+}
+
+h2 {
+  font-size: 1.3em; /* Tamaño reducido para h2 */
+  color: #0056b3; /* Azul oscuro */
+  text-align: start;
+}
+
 h3 {
+  font-size: 1.1em; /* Tamaño reducido para h3 */
   color: #0056b3; /* Azul oscuro */
   text-align: start;
 }
@@ -27,8 +38,7 @@ label {
 
 input[type="text"],
 input[type="password"],
-input[type="file"],
-input[type="text"] {
+input[type="file"] {
   padding: 10px;
   width: 80%;
   max-width: 300px;
