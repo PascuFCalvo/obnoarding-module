@@ -1,4 +1,3 @@
-
 let currentUser = null;
 let currentDocument = null;
 const signaturePad = new SignaturePad(document.getElementById("signaturePad"));
@@ -54,6 +53,25 @@ async function toggleWorkers() {
 }
 
 buttonVerEmpleados.addEventListener("click", toggleWorkers);
+
+let ButtonVerDocumentos = document.getElementById("toggleDocuments");
+ButtonVerDocumentos.addEventListener("click", toggleDocuments);
+
+async function toggleDocuments() {
+  let documentsBySociety = document.getElementById("documentsBySociety");
+  let buttonVerDocumentos = document.getElementById("toggleDocuments");
+
+  if (
+    documentsBySociety.style.display === "none" ||
+    !documentsBySociety.style.display
+  ) {
+    documentsBySociety.style.display = "block";
+    buttonVerDocumentos.innerHTML = "Ocultar documentos";
+  } else {
+    documentsBySociety.style.display = "none";
+    buttonVerDocumentos.innerHTML = "Ver documentos";
+  }
+}
 
 async function clearSignature() {
   let name = document.getElementById("name");
