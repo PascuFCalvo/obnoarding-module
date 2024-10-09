@@ -35,6 +35,6 @@ router.get(
   "/manager/worker-documents/:managerId/:workerId",
   getSignedDocuments
 );
-router.post("/sign-document", getManagerWorkerDocuments);
+router.post("/sign-document", signDocument);
 
 module.exports = router;

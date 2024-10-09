@@ -201,7 +201,7 @@ async function loadWorkerList() {
 
     data.workers.forEach((worker) => {
       const workerItem = document.createElement("div");
-      workerItem.innerHTML = `<strong>${worker.name}</strong>`;
+      workerItem.innerHTML = `<strong>${worker.name}</strong> <span>(${worker.department})</span>`;
       workerItem.style.cursor = "pointer";
       let documentsByWorker = document.getElementById("documentsByWorker");
       workerItem.addEventListener("click", () => {
@@ -255,22 +255,20 @@ async function loadWorkerDocuments(workerId) {
 
   // Iterar sobre cada departamento en la estructura agrupada
   for (const department in groupedDocuments) {
-    const departmentHeader = document.createElement("h2");
-    departmentHeader.textContent = department; // Nombre del departamento
-    documentsByWorkerContainer.appendChild(departmentHeader);
-
-    // Iterar sobre cada bloque dentro del departamento
     for (const block in groupedDocuments[department]) {
-      const blockHeader = document.createElement("h3");
-      blockHeader.textContent = block; // Nombre del bloque
-      documentsByWorkerContainer.appendChild(blockHeader);
-
-      const ul = document.createElement("ul"); // Lista de documentos del bloque
+      const ul = document.createElement("ul");
 
       groupedDocuments[department][block].forEach((doc) => {
         const li = document.createElement("li");
+        const check = document.createElement("p");
+        check.innerHTML = `✅`;
+
         li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName} </a>`;
         ul.appendChild(li); // Añadir documento a la lista
+        li.appendChild(check);
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
       });
 
       documentsByWorkerContainer.appendChild(ul); // Añadir la lista de documentos al bloque

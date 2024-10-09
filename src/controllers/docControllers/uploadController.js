@@ -6,7 +6,7 @@ const path = require("path");
 // Configuración de almacenamiento
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const societyId = req.session.societyId  // Obtener el societyId de la sesión
+    const societyId = req.session.societyId; // Obtener el societyId de la sesión
     const department = req.session.department || "general"; // Obtener el departamento de la sesión
     const block = req.session.block; // Obtener el bloque de la sesión
 

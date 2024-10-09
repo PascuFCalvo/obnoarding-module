@@ -66,16 +66,20 @@ async function signDocument(req, res) {
   firstPage.drawText(`Fecha: ${date}`, { x: 50, y: 80, size: 12 });
 
   // Guardar el documento firmado
-  const signedFilePath = path.join(
+  const signedDirectoryPath = path.join(
     __dirname,
-    `../../../uploads/society_${worker.societyId}/worker_${workerId}`,
+    `../../../uploads/society_${worker.societyId}/worker_${workerId}`
+  );
+  const signedFilePath = path.join(
+    signedDirectoryPath,
     `signed_${documentName}`
   );
   console.log("Ruta del documento firmado:", signedFilePath); // Ruta para guardar el documento firmado
 
-  if (!fs.existsSync(path.dirname(signedFilePath))) {
-    fs.mkdirSync(path.dirname(signedFilePath), { recursive: true });
-    console.log("Directorio creado:", path.dirname(signedFilePath)); // Confirmación de creación de directorio
+  // Crear la carpeta del trabajador si no existe
+  if (!fs.existsSync(signedDirectoryPath)) {
+    fs.mkdirSync(signedDirectoryPath, { recursive: true });
+    console.log("Directorio creado:", signedDirectoryPath); // Confirmación de creación de directorio
   }
 
   const signedPdfBytes = await pdfDoc.save();

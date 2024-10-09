@@ -14,6 +14,7 @@ function getManagerWorkerList(req, res) {
     .map((worker) => ({
       id: worker.id,
       name: worker.name,
+      department: worker.department,
     }));
 
   res.json({ workers });

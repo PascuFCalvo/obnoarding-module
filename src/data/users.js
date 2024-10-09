@@ -2,7 +2,7 @@
 const users = [
   {
     id: 1,
-    name: "Trabajador1",
+    name: "Pascu",
     username: "worker1",
     password: "1234",
     role: "worker",
@@ -11,7 +11,7 @@ const users = [
   },
   {
     id: 2,
-    name: "Trabajador2",
+    name: "Pepe",
     username: "worker2",
     password: "1234",
     role: "worker",
