@@ -2,6 +2,24 @@ let currentUser = null;
 let currentDocument = null;
 const signaturePad = new SignaturePad(document.getElementById("signaturePad"));
 
+const buttonVerEmpleados = document.getElementById("toggleWorkers");
+buttonVerEmpleados.addEventListener("click", toggleWorkers);
+
+const buttonVerDocumentos = document.getElementById("toggleDocuments");
+buttonVerDocumentos.addEventListener("click", toggleDocuments);
+
+const clearSignatureButton = document.getElementById("clearSignature");
+clearSignatureButton.addEventListener("click", clearSignature);
+
+let buttonClosePreview = document.getElementById("closePreview");
+buttonClosePreview.addEventListener("click", closePreview);
+
+document.getElementById("loginForm").addEventListener("submit", login);
+document.getElementById("logoutBtn").addEventListener("click", logout);
+document.getElementById("uploadForm").addEventListener("submit", uploadDocument);
+document.getElementById("saveSignature").addEventListener("click", saveSignature);
+
+// Función para reiniciar la interfaz de usuario
 function resetUI() {
   document.getElementById("loginForm").classList.remove("hidden");
   document.getElementById("managerArea").classList.add("hidden");
@@ -13,7 +31,6 @@ function resetUI() {
   currentUser = null;
   currentDocument = null;
 }
-
 // Cargar departamentos para el manager
 async function loadDepartments() {
   const response = await fetch(
@@ -34,8 +51,7 @@ async function loadDepartments() {
     departmentSelect.appendChild(option);
   });
 }
-const buttonVerEmpleados = document.getElementById("toggleWorkers");
-
+// Función para mostrar u ocultar la lista de empleados
 async function toggleWorkers() {
   let workerList = document.getElementById("workerList");
   let workerDocuments = document.getElementById("workerDocuments");
@@ -51,12 +67,7 @@ async function toggleWorkers() {
     buttonVerEmpleados.innerHTML = "Ver empleados";
   }
 }
-
-buttonVerEmpleados.addEventListener("click", toggleWorkers);
-
-let ButtonVerDocumentos = document.getElementById("toggleDocuments");
-ButtonVerDocumentos.addEventListener("click", toggleDocuments);
-
+// Función para mostrar u ocultar la lista de documentos
 async function toggleDocuments() {
   let documentsBySociety = document.getElementById("documentsBySociety");
   let buttonVerDocumentos = document.getElementById("toggleDocuments");
@@ -72,7 +83,7 @@ async function toggleDocuments() {
     buttonVerDocumentos.innerHTML = "Ver documentos";
   }
 }
-
+// Limpiar la firma
 async function clearSignature() {
   let name = document.getElementById("name");
   name.value = "";
@@ -80,9 +91,6 @@ async function clearSignature() {
   dni.value = "";
   signaturePad.clear();
 }
-let clearSignatureButton = document.getElementById("clearSignature");
-clearSignatureButton.addEventListener("click", clearSignature);
-
 // Cargar bloques
 async function loadBlocks() {
   const response = await fetch("http://localhost:3000/managers/blocks");
@@ -102,102 +110,94 @@ async function loadBlocks() {
 
   return data.blocks;
 }
+// Iniciar sesión
+async function login(event) {
+  event.preventDefault();
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
-document
-  .getElementById("loginForm")
-  .addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const response = await fetch("http://localhost:3000/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      currentUser = data.user;
-      alert(`Login exitoso. Bienvenido, ${currentUser.name}`);
-      document.getElementById("loginForm").classList.add("hidden");
-      document.getElementById("logoutBtn").classList.remove("hidden");
-
-      if (currentUser.role === "manager") {
-        document.getElementById("managerArea").classList.remove("hidden");
-        loadDepartments();
-        loadBlocks();
-        loadWorkerList();
-        loadSocietyDocuments();
-      } else if (currentUser.role === "worker") {
-        document.getElementById("workerArea").classList.remove("hidden");
-        loadDocumentsForWorker();
-        loadSignedDocumentsForWorker();
-      }
-    } else {
-      alert("Login fallido: " + data.message);
-    }
+  const response = await fetch("http://localhost:3000/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
   });
+  const data = await response.json();
 
-// Logout del usuario
-document.getElementById("logoutBtn").addEventListener("click", function () {
-  alert("Has cerrado sesión correctamente.");
-  resetUI();
-});
+  if (response.ok) {
+    currentUser = data.user;
+    alert(`Login exitoso. Bienvenido, ${currentUser.name}`);
+    document.getElementById("loginForm").classList.add("hidden");
+    document.getElementById("logoutBtn").classList.remove("hidden");
 
-// Subida de documentos para el manager
-document
-  .getElementById("uploadForm")
-  .addEventListener("submit", async function (event) {
-    event.preventDefault();
-
-    // Obtener valores del formulario
-    const documentFile = document.getElementById("document").files[0];
-    const societyId = currentUser.societyId; // Suponiendo que tienes el id de la sociedad en currentUser
-    const department = document.getElementById("department").value; // Obtener departamento
-    const block = document.getElementById("block").value; // Obtener bloque
-
-    // Enviar información de la sociedad, departamento y bloque
-    const infoResponse = await fetch(
-      "http://localhost:3000/documents/upload-info",
-      {
-        method: "POST",
-        body: JSON.stringify({ societyId, department, block }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!infoResponse.ok) {
-      const infoData = await infoResponse.json();
-      alert(
-        "Error al enviar la información de sociedad, departamento y bloque: " +
-          infoData.message
-      );
-      return; // Detener si falla
-    }
-
-    // Subir el archivo
-    const fileFormData = new FormData();
-    fileFormData.append("document", documentFile);
-    const fileResponse = await fetch(
-      "http://localhost:3000/documents/upload-file",
-      {
-        method: "POST",
-        body: fileFormData,
-      }
-    );
-
-    const fileData = await fileResponse.json();
-    if (fileResponse.ok) {
-      alert("Documento subido correctamente.");
+    if (currentUser.role === "manager") {
+      document.getElementById("managerArea").classList.remove("hidden");
+      loadDepartments();
+      loadBlocks();
+      loadWorkerList();
       loadSocietyDocuments();
-    } else {
-      alert("Error al subir el documento: " + fileData.message);
+    } else if (currentUser.role === "worker") {
+      document.getElementById("workerArea").classList.remove("hidden");
+      loadDocumentsForWorker();
+      loadSignedDocumentsForWorker();
     }
-  });
+  } else {
+    alert("Login fallido: " + data.message);
+  }
+}
+// cerrar sesión
+function logout() {
+  resetUI();
+}
+//funcion subir documentos para el manager
+async function uploadDocument(event) {
+  event.preventDefault();
 
+  // Obtener valores del formulario
+  const documentFile = document.getElementById("document").files[0];
+  const societyId = currentUser.societyId; // Suponiendo que tienes el id de la sociedad en currentUser
+  const department = document.getElementById("department").value; // Obtener departamento
+  const block = document.getElementById("block").value; // Obtener bloque
+
+  // Enviar información de la sociedad, departamento y bloque
+  const infoResponse = await fetch(
+    "http://localhost:3000/documents/upload-info",
+    {
+      method: "POST",
+      body: JSON.stringify({ societyId, department, block }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!infoResponse.ok) {
+    const infoData = await infoResponse.json();
+    alert(
+      "Error al enviar la información de sociedad, departamento y bloque: " +
+        infoData.message
+    );
+    return; // Detener si falla
+  }
+
+  // Subir el archivo
+  const fileFormData = new FormData();
+  fileFormData.append("document", documentFile);
+  const fileResponse = await fetch(
+    "http://localhost:3000/documents/upload-file",
+    {
+      method: "POST",
+      body: fileFormData,
+    }
+  );
+
+  const fileData = await fileResponse.json();
+  if (fileResponse.ok) {
+    alert("Documento subido correctamente.");
+    loadSocietyDocuments();
+  } else {
+    alert("Error al subir el documento: " + fileData.message);
+  }
+}
 // Cargar lista de trabajadores para el manager
 async function loadWorkerList() {
   const workerList = document.getElementById("workerList");
@@ -232,7 +232,6 @@ async function loadWorkerList() {
     console.error("Error al cargar la lista de trabajadores:", error);
   }
 }
-
 // Cargar documentos firmados por el trabajador seleccionado (manager)
 async function loadWorkerDocuments(workerId) {
   // Obtener documentos no firmados
@@ -383,7 +382,6 @@ async function loadWorkerDocuments(workerId) {
   renderDocuments(groupedUnsignedDocuments, false);
   renderDocuments(groupedSignedDocuments, true);
 }
-
 // Cargar documentos subidos por el manager para el trabajador
 async function loadDocumentsForWorker() {
   const response = await fetch(
@@ -426,12 +424,10 @@ async function loadDocumentsForWorker() {
     }
   }
 }
-
-let buttonClosePreview = document.getElementById("closePreview");
-buttonClosePreview.addEventListener("click", function () {
+// Cerrar la previsualización del documento
+function closePreview() {
   document.getElementById("signDocumentContainer").classList.add("hidden");
-});
-
+}
 // Previsualizar el documento
 function previewDocument(documentUrl) {
   const pdfViewer = document.getElementById("pdfViewer");
@@ -440,57 +436,53 @@ function previewDocument(documentUrl) {
 
   document.getElementById("saveSignature").classList.remove("hidden");
 }
-
 // Guardar la firma en el documento
-document
-  .getElementById("saveSignature")
-  .addEventListener("click", async function () {
-    if (signaturePad.isEmpty()) {
-      alert("Por favor, añade una firma.");
-      return;
+async function saveSignature() {
+  if (signaturePad.isEmpty()) {
+    alert("Por favor, añade una firma.");
+    return;
+  }
+
+  const name = document.getElementById("name").value;
+  const dni = document.getElementById("DNI").value;
+
+  if (!name || !dni) {
+    alert("Por favor, introduce tu nombre y DNI.");
+    return;
+  }
+
+  const signatureDataUrl = signaturePad.toDataURL();
+  const formData = {
+    workerId: currentUser.id,
+    documentName: currentDocument,
+    signatureDataUrl: signatureDataUrl,
+    name: name,
+    DNI: dni,
+    date: new Date().toLocaleDateString(),
+  };
+
+  const response = await fetch(
+    "http://localhost:3000/documents/sign-document",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     }
+  );
 
-    const name = document.getElementById("name").value;
-    const dni = document.getElementById("DNI").value;
+  if (response.ok) {
+    const data = await response.json();
+    alert("Documento firmado correctamente.");
+    document.getElementById("pdfViewer").src = data.filePath; // Muestra el documento firmado
 
-    if (!name || !dni) {
-      alert("Por favor, introduce tu nombre y DNI.");
-      return;
-    }
-
-    const signatureDataUrl = signaturePad.toDataURL();
-    const formData = {
-      workerId: currentUser.id,
-      documentName: currentDocument,
-      signatureDataUrl: signatureDataUrl,
-      name: name,
-      DNI: dni,
-      date: new Date().toLocaleDateString(),
-    };
-
-    const response = await fetch(
-      "http://localhost:3000/documents/sign-document",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      alert("Documento firmado correctamente.");
-      document.getElementById("pdfViewer").src = data.filePath; // Muestra el documento firmado
-
-      document.getElementById("saveSignature").classList.add("hidden");
-      signaturePad.clear();
-      loadDocumentsForWorker(); // Actualiza la lista de documentos
-      loadSignedDocumentsForWorker(); // Actualiza la lista de documentos firmados
-    } else {
-      alert("Error al firmar el documento.");
-    }
-  });
-
+    document.getElementById("saveSignature").classList.add("hidden");
+    signaturePad.clear();
+    loadDocumentsForWorker(); // Actualiza la lista de documentos
+    loadSignedDocumentsForWorker(); // Actualiza la lista de documentos firmados
+  } else {
+    alert("Error al firmar el documento.");
+  }
+}
 // Cargar documentos firmados por el trabajador
 async function loadSignedDocumentsForWorker() {
   const response = await fetch(
@@ -528,7 +520,6 @@ async function loadSignedDocumentsForWorker() {
     }
   }
 }
-
 // Cargar documentos subidos por el manager para mostrar en "Documentos de la Sociedad"
 async function loadSocietyDocuments() {
   const response = await fetch(
