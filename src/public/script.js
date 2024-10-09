@@ -218,62 +218,155 @@ async function loadWorkerList() {
 
 // Cargar documentos firmados por el trabajador seleccionado (manager)
 async function loadWorkerDocuments(workerId) {
-  const response = await fetch(
-    `http://localhost:3000/workers/manager/worker-documents/${currentUser.id}/${workerId}`
+  // Obtener documentos no firmados
+  const unsignedResponse = await fetch(
+    `http://localhost:3000/documents/worker/unsigned-documents/${currentUser.id}/${workerId}`
   );
-  const data = await response.json();
-  console.log(data); // Para depurar y ver la respuesta
+
+  if (!unsignedResponse.ok) {
+    console.error(
+      "Error al obtener documentos no firmados:",
+      unsignedResponse.statusText
+    );
+    return;
+  }
+
+  const unsignedData = await unsignedResponse.json();
+  console.log("Documentos no firmados recibidos:", unsignedData); // Para depurar
+
+  // Obtener documentos firmados
+  const signedResponse = await fetch(
+    `http://localhost:3000/documents/worker/signed-documents/${workerId}`
+  );
+
+  if (!signedResponse.ok) {
+    console.error(
+      "Error al obtener documentos firmados:",
+      signedResponse.statusText
+    );
+    return;
+  }
+
+  const signedData = await signedResponse.json();
+  console.log("Documentos firmados recibidos:", signedData); // Para depurar
 
   const documentsByWorkerContainer =
     document.getElementById("documentsByWorker");
   documentsByWorkerContainer.innerHTML = ""; // Limpiar contenido anterior
 
-  // Verificar si hay documentos
-  if (!data.documents || data.documents.length === 0) {
+  // Verificar si hay documentos no firmados
+  if (
+    (!unsignedData.documents ||
+      Object.keys(unsignedData.documents).length === 0) &&
+    (!signedData.signedDocuments ||
+      Object.keys(signedData.signedDocuments).length === 0)
+  ) {
     documentsByWorkerContainer.innerHTML =
       "<p>No hay documentos disponibles.</p>";
     return;
   }
 
-  // Agrupar documentos por departamento y bloque
-  const groupedDocuments = {};
-
-  data.documents.forEach((doc) => {
-    const { department, block } = doc; // Asegúrate de que el objeto doc tiene estas propiedades
-
-    // Asegurarse de que la estructura existe
-    if (!groupedDocuments[department]) {
-      groupedDocuments[department] = {};
-    }
-    if (!groupedDocuments[department][block]) {
-      groupedDocuments[department][block] = [];
-    }
-
-    // Añadir el documento al grupo correspondiente
-    groupedDocuments[department][block].push(doc);
-  });
-
-  // Iterar sobre cada departamento en la estructura agrupada
-  for (const department in groupedDocuments) {
-    for (const block in groupedDocuments[department]) {
-      const ul = document.createElement("ul");
-
-      groupedDocuments[department][block].forEach((doc) => {
-        const li = document.createElement("li");
-        const check = document.createElement("p");
-        check.innerHTML = `✅`;
-
-        li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName} </a>`;
-        ul.appendChild(li); // Añadir documento a la lista
-        li.appendChild(check);
-        li.style.display = "flex";
-        li.style.justifyContent = "space-between";
-        li.style.alignItems = "center";
+  // Crear un conjunto de nombres de archivos firmados
+  const signedFileNames = new Set();
+  for (const department in signedData.signedDocuments) {
+    for (const block in signedData.signedDocuments[department]) {
+      const docs = signedData.signedDocuments[department][block];
+      docs.forEach((doc) => {
+        signedFileNames.add(doc.fileName.replace(/^signed_/, "")); // Agregar el nombre sin el prefijo
       });
-
-      documentsByWorkerContainer.appendChild(ul); // Añadir la lista de documentos al bloque
     }
   }
+
+  // Función para agrupar documentos
+  const groupDocuments = (data, type) => {
+    const groupedDocuments = {};
+    const docKey = type === "signed" ? "signedDocuments" : "documents";
+
+    for (const department in data[docKey]) {
+      for (const block in data[docKey][department]) {
+        const docs = data[docKey][department][block];
+
+        if (!Array.isArray(docs)) {
+          console.error(
+            `Error: docs no es un arreglo para ${department} - ${block}`,
+            docs
+          );
+          continue; // Salir si no es un arreglo
+        }
+
+        if (!groupedDocuments[department]) {
+          groupedDocuments[department] = {};
+        }
+        if (!groupedDocuments[department][block]) {
+          groupedDocuments[department][block] = [];
+        }
+
+        groupedDocuments[department][block].push(...docs);
+      }
+    }
+    return groupedDocuments;
+  };
+
+  // Agrupar documentos
+  const groupedUnsignedDocuments = groupDocuments(unsignedData, "unsigned");
+  const groupedSignedDocuments = groupDocuments(signedData, "signed");
+
+  // Filtrar documentos no firmados que ya están firmados
+  for (const department in groupedUnsignedDocuments) {
+    for (const block in groupedUnsignedDocuments[department]) {
+      groupedUnsignedDocuments[department][block] = groupedUnsignedDocuments[
+        department
+      ][block].filter((doc) => {
+        return !signedFileNames.has(doc.fileName); // Filtrar documentos ya firmados
+      });
+    }
+  }
+
+  // Función para renderizar documentos
+  const renderDocuments = (groupedDocs, isSigned) => {
+    for (const department in groupedDocs) {
+      for (const block in groupedDocs[department]) {
+        const ul = document.createElement("ul");
+
+        const docs = groupedDocs[department][block];
+
+        // Asegurarse de que 'docs' es un arreglo
+        if (Array.isArray(docs)) {
+          docs.forEach((doc) => {
+            const li = document.createElement("li");
+            const statusIndicator = document.createElement("span");
+
+            if (isSigned) {
+              statusIndicator.innerHTML = "✅"; // Check verde para documentos firmados
+              statusIndicator.style.color = "green"; // Puedes agregar un estilo adicional
+            } else {
+              statusIndicator.innerHTML = "❌"; // X roja para documentos no firmados
+              statusIndicator.style.color = "red"; // Puedes agregar un estilo adicional
+            }
+
+            li.innerHTML = `<a href="${doc.filePath}" download>${doc.fileName}</a>`;
+            li.appendChild(statusIndicator); // Añadir ícono de estado al documento
+            li.style.display = "flex";
+            li.style.justifyContent = "space-between";
+            li.style.alignItems = "center";
+
+            ul.appendChild(li); // Añadir documento a la lista
+          });
+        } else {
+          console.error(
+            `Error: docs no es un arreglo para ${department} - ${block}`,
+            docs
+          );
+        }
+
+        documentsByWorkerContainer.appendChild(ul); // Añadir la lista de documentos al bloque
+      }
+    }
+  };
+
+  // Renderizar documentos no firmados y firmados
+  renderDocuments(groupedUnsignedDocuments, false);
+  renderDocuments(groupedSignedDocuments, true);
 }
 
 // Cargar documentos subidos por el manager para el trabajador

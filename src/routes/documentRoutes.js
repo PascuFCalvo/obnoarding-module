@@ -7,6 +7,7 @@ const getManagerDocuments = require("../controllers/docControllers/getManagerDoc
 const getWorkerDocuments = require("../controllers/docControllers/getWorkerDocuments");
 const getSignedDocuments = require("../controllers/docControllers/getSignedDocuments");
 const getManagerWorkerDocuments = require("../controllers/docControllers/getManagerWorkerDocuments");
+const getUnsignedDocuments = require("../controllers/docControllers/getUnsignedDocuments");
 
 const router = express.Router();
 
@@ -31,6 +32,10 @@ router.get("/society-documents/:societyId", getSocietyDocuments);
 router.get("/manager/society-documents/:managerId", getManagerDocuments);
 router.get("/documents/:workerId", getWorkerDocuments);
 router.get("/worker/signed-documents/:workerId", getSignedDocuments);
+router.get(
+  "/worker/unsigned-documents/:managerId/:workerId",
+  getUnsignedDocuments
+);
 router.get(
   "/manager/worker-documents/:managerId/:workerId",
   getSignedDocuments
