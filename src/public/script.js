@@ -16,8 +16,12 @@ buttonClosePreview.addEventListener("click", closePreview);
 
 document.getElementById("loginForm").addEventListener("submit", login);
 document.getElementById("logoutBtn").addEventListener("click", logout);
-document.getElementById("uploadForm").addEventListener("submit", uploadDocument);
-document.getElementById("saveSignature").addEventListener("click", saveSignature);
+document
+  .getElementById("uploadForm")
+  .addEventListener("submit", uploadDocument);
+document
+  .getElementById("saveSignature")
+  .addEventListener("click", saveSignature);
 
 // Función para reiniciar la interfaz de usuario
 function resetUI() {
@@ -27,6 +31,8 @@ function resetUI() {
   document.getElementById("pdfViewer").classList.add("hidden");
   document.getElementById("saveSignature").classList.add("hidden");
   document.getElementById("logoutBtn").classList.add("hidden");
+  document.getElementById("titleLogin").innerHTML = "Iniciar sesión";
+
   signaturePad.clear();
   currentUser = null;
   currentDocument = null;
@@ -140,6 +146,8 @@ async function login(event) {
       loadDocumentsForWorker();
       loadSignedDocumentsForWorker();
     }
+    const titleLogin = document.getElementById("titleLogin");
+    titleLogin.innerHTML = `Bienvenido ${username}`;
   } else {
     alert("Login fallido: " + data.message);
   }
