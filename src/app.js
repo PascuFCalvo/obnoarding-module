@@ -5,9 +5,10 @@ const dotenv = require("dotenv");
 const path = require("path");
 const authMiddleware = require("./middlewares/authMiddleware");
 
-dotenv.config();
 
+dotenv.config();
 const app = express();
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,20 +23,15 @@ app.use(
   })
 );
 
-// Sirve contenido estático desde 'public' y 'uploads'
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
 // Rutas protegidas con authMiddleware
-app.use("/managers", authMiddleware, require("./routes/managerRoutes"));
 app.use("/auth", require("./routes/authRoutes"));
-app.use("/documents", require("./routes/documentRoutes"));
-app.use("/workers", require("./routes/workerRoutes"));
 app.use("/usuarios", require("./routes/usuariosRoutes"));
 app.use("/roles", require("./routes/rolesRoutes"));
 app.use("/departamentos", require("./routes/departamentosRoutes"));
 app.use("/grupos", require("./routes/gruposRoutes"));
 app.use("/notificaciones", require("./routes/notificacionesRoutes"));
+
+app.use("/documentacion", require("./routes/documentacionRoutes")); // Asegúrate de usar la ruta correcta
 
 // Puerto de escucha
 const PORT = process.env.PORT || 3000;

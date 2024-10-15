@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
   class Notificaciones extends Model {
     static associate(models) {
       Notificaciones.belongsTo(models.Usuario, {
-        foreignKey: "usuario_id",
+        foreignKey: "id_usuario",
         as: "usuario",
       });
       Notificaciones.belongsTo(models.Documentacion, {

@@ -6,11 +6,11 @@ module.exports = (sequelize) => {
     static associate(models) {
       Documentacion.belongsToMany(models.Usuario, {
         through: models.UsuarioDocumentacion,
-        foreignKey: "documento_id",
+        foreignKey: "id_usuario",
         as: "usuarios",
       });
       Documentacion.belongsTo(models.Sociedad, {
-        foreignKey: "sociedad_id",
+        foreignKey: "sociedad_id", // Asegúrate de que este es el nombre correcto
         as: "sociedad",
       });
     }
@@ -26,6 +26,11 @@ module.exports = (sequelize) => {
       fecha_subida: DataTypes.DATE,
       is_firmado: DataTypes.BOOLEAN,
       url: DataTypes.STRING,
+      // Añade esto si esperas que la columna exista en la base de datos
+      sociedad_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Cambia a false si es obligatorio
+      },
     },
     {
       sequelize,

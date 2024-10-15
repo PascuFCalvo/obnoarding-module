@@ -6,7 +6,7 @@ module.exports = {
       "UsuarioDocumentacion",
       [
         {
-          usuario_id: 1,
+          id_usuario: 1,
           documento_id: 1,
           acceso: true,
           firma: false,
@@ -14,7 +14,7 @@ module.exports = {
           firma_uuid: "UUID1",
         },
         {
-          usuario_id: 2,
+          id_usuario: 2,
           documento_id: 2,
           acceso: true,
           firma: true,
@@ -23,7 +23,7 @@ module.exports = {
           firma_uuid: "UUID2",
         },
         {
-          usuario_id: 3,
+          id_usuario: 3,
           documento_id: 3,
           acceso: true,
           firma: true,

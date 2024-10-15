@@ -7,15 +7,15 @@ module.exports = (sequelize) => {
     static associate(models) {
       Usuario.belongsToMany(models.Roles, {
         through: models.UsuarioRoles,
-        foreignKey: "usuario_id",
-        as: "roles", // Asegúrate de que este alias esté configurado
+        foreignKey: "id_usuario",
+        as: "roles",
       });
       Usuario.hasMany(models.UsuarioRoles, {
-        foreignKey: "usuario_id",
+        foreignKey: "id_usuario",
         as: "usuarioRoles",
       });
       Usuario.hasMany(models.Notificaciones, {
-        foreignKey: "usuario_id",
+        foreignKey: "id_usuario",
         as: "notificaciones",
       });
     }

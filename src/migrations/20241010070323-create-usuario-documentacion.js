@@ -8,7 +8,7 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
       },
-      usuario_id: {
+      id_usuario: {
         type: Sequelize.INTEGER,
         references: {
           model: "Usuarios",
@@ -29,6 +29,10 @@ module.exports = {
       acceso: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
+      },
+      UsuarioId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
       },
       firma: {
         type: Sequelize.BOOLEAN,

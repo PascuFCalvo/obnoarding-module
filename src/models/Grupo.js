@@ -9,6 +9,7 @@ module.exports = (sequelize) => {
         as: "departamento",
       });
       Grupo.hasMany(models.Usuario, { foreignKey: "grupo_id", as: "usuarios" });
+     
     }
   }
 

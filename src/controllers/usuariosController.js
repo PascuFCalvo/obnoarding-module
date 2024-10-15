@@ -80,7 +80,7 @@ async function createUsuario(req, res) {
 
     // Asignar el rol al nuevo usuario en la tabla UsuarioRoles
     await UsuarioRoles.create({
-      usuario_id: usuario.id,
+      id_usuario: usuario.id,
       rol_id: rol_id, // Asumimos que rol_id se envía desde el formulario
     });
 
