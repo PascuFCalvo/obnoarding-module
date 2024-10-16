@@ -7,7 +7,7 @@ module.exports = {
       [
         {
           marca_id: 1,
-          nombre: "TechSolutions - España",
+          nombre: "TechSolutions - Espana",
           direccion: "Calle Innovación 12, Madrid",
           telefono: "912345678",
         },
@@ -19,7 +19,7 @@ module.exports = {
         },
         {
           marca_id: 2,
-          nombre: "GreenEnergy - España",
+          nombre: "GreenEnergy - Espana",
           direccion: "Av. Renovable 45, Sevilla",
           telefono: "955678901",
         },
