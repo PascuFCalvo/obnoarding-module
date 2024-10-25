@@ -5,8 +5,6 @@ function signDocument(req, res) {
   const { name, dni, signatureData, user, deviceInfo, location, biometrics } =
     req.body;
 
-    
-
   if (!name || !dni || !signatureData || !user) {
     return res
       .status(400)
@@ -42,7 +40,7 @@ function signDocument(req, res) {
   };
 
   // Registro en consola para verificar
-  // console.log("Nueva Firma Registrada:", newSignature);
+  console.log("Nueva Firma Registrada:", newSignature);
 
   // Enviar respuesta con el identificador único
   res.status(201).json({ uniqueIdentifier });

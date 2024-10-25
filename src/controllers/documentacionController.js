@@ -200,6 +200,7 @@ const getDocumentosPorUsuarioYsociedad = async (req, res) => {
           ],
         },
       ],
+      attributes: ["firma", "url"], // Incluye 'firma' y 'url' directamente en el modelo
     });
 
     if (!documentos.length) {

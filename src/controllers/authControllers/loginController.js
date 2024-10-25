@@ -1,5 +1,13 @@
 const jwt = require("jsonwebtoken");
-const { Login, Usuario, UsuarioRoles, Roles } = require("../../models");
+const {
+  Login,
+  Usuario,
+  UsuarioGrupo,
+  Grupo,
+  Departamento,
+  Sociedad,
+  Roles,
+} = require("../../models");
 const JWT_SECRET = process.env.JWT_SECRET || "tu_secreto_jwt";
 
 async function loginController(req, res) {
@@ -21,6 +29,25 @@ async function loginController(req, res) {
           as: "roles",
           through: { attributes: [] }, // No incluir atributos de la tabla intermedia
         },
+        {
+          model: Grupo,
+          as: "gruposAsociados", // Asumiendo el alias configurado
+          through: { model: UsuarioGrupo, attributes: [] },
+          include: [
+            {
+              model: Departamento,
+              as: "departamento", // Alias en el modelo Departamento
+              attributes: ["id", "nombre"],
+              include: [
+                {
+                  model: Sociedad,
+                  as: "sociedad", // Alias en el modelo Sociedad
+                  attributes: ["id", "nombre"],
+                },
+              ],
+            },
+          ],
+        },
       ],
       attributes: { exclude: ["grupo_id"] }, // Excluir grupo_id
     });
@@ -33,8 +60,6 @@ async function loginController(req, res) {
     // Obtener el rol del usuario
     const roles = usuario.roles.map((role) => role.nombre);
     let roleToAdd = "";
-    const sociedadId = usuario.sociedad_id;
-    const marcaId = usuario.marca_id; // Asegúrate de tener este campo en el modelo Usuario
 
     // Verificar los roles y establecer el rol correspondiente
     if (roles.includes("Manager")) {
@@ -49,14 +74,23 @@ async function loginController(req, res) {
         .json({ message: "Acceso denegado: rol desconocido" });
     }
 
+    // Obtener los detalles del grupo y departamento
+    const grupo = usuario.gruposAsociados?.[0] || null; // Se asume un usuario pertenece a un solo grupo
+    const departamento = grupo ? grupo.departamento : null;
+    const sociedad = departamento ? departamento.sociedad : null;
+
     // Generar el token JWT
     const token = jwt.sign(
       {
         id: usuario.id,
         username: loginUser.username,
         role: roleToAdd,
-        sociedadId: sociedadId,
-        marcaId: marcaId,
+        grupoId: grupo ? grupo.id : null,
+        grupoNombre: grupo ? grupo.nombre : null,
+        departamentoId: departamento ? departamento.id : null,
+        departamentoNombre: departamento ? departamento.nombre : null,
+        sociedadId: sociedad ? sociedad.id : null,
+        sociedadNombre: sociedad ? sociedad.nombre : null,
       },
       JWT_SECRET,
       { expiresIn: "1h" }
@@ -65,7 +99,7 @@ async function loginController(req, res) {
     // Responder con el token y el rol
     res.json({ token, role: roleToAdd });
   } catch (error) {
-    console.error("Error en el login:", error); // Esto mostrará el error completo
+    console.error("Error en el login:", error);
     res
       .status(500)
       .json({ message: "Error en el servidor", error: error.message });
