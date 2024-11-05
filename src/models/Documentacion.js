@@ -25,11 +25,22 @@ module.exports = (sequelize) => {
       descripcion: DataTypes.TEXT,
       fecha_subida: DataTypes.DATE,
       is_firmado: DataTypes.BOOLEAN,
-      url: DataTypes.STRING,
-      // Añade esto si esperas que la columna exista en la base de datos
+      url: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      linkCourse: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      
       sociedad_id: {
         type: DataTypes.INTEGER,
         allowNull: true, // Cambia a false si es obligatorio
+      },
+      periodo: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {

@@ -16,18 +16,26 @@ const fs = require("fs");
 const uploadDocumentacion = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No se ha subido ningún archivo." });
-    }
-
     console.log("Datos recibidos en req.body:", req.body);
 
-    const { users, descripcion, nombre, sociedad, groups, departments } =
-      req.body;
+    const {
+      users,
+      descripcion,
+      nombre,
+      sociedad,
+      period,
+      departments,
+      groups,
+      course,
+    } = req.body;
+
     const sociedadId = sociedad ? JSON.parse(sociedad) : null;
     const userIds = users ? JSON.parse(users) : [];
-    const grupoIds = groups ? JSON.parse(groups) : [];
     const departamentoIds = departments ? JSON.parse(departments) : [];
+    const grupoIds = groups ? JSON.parse(groups) : [];
+    const periodo = period ? new Date(period) : null;
+    const curso = course || null;
+    const urlcurso = `https://academy.turiscool.com/course/${curso}`;
 
     if (!sociedadId) {
       throw new Error("ID de Sociedad no válido");
@@ -38,31 +46,41 @@ const uploadDocumentacion = async (req, res) => {
       return res.status(404).json({ error: "Sociedad no encontrada." });
     }
 
+    // Variables para el archivo
+    let newFileName = null;
+    let newPath = null;
     const sociedadNombre = sociedadRecord.nombre;
-    const extension = path.extname(req.file.originalname);
-    const newFileName = `${nombre}${extension}`;
-    const dirPath = `uploads/${sociedadNombre}`;
 
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
+    // Manejo del archivo si está presente
+    if (req.file) {
+      const extension = path.extname(req.file.originalname);
+      newFileName = `${nombre}${extension}`;
+      const dirPath = `uploads/${sociedadNombre}`;
+
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+
+      const oldPath = `uploads/${req.file.filename}`;
+      newPath = `${dirPath}/${newFileName}`;
+      fs.renameSync(oldPath, newPath);
     }
 
-    const oldPath = `uploads/${req.file.filename}`;
-    const newPath = `${dirPath}/${newFileName}`;
-    fs.renameSync(oldPath, newPath);
-
+    // Crear el registro de documento en la base de datos
     const newDocument = await Documentacion.create(
       {
-        nombre: newFileName,
+        nombre: newFileName || nombre, // Si no hay archivo, usar el nombre proporcionado
         descripcion: descripcion,
-        url: newPath,
+        url: newPath, // URL solo si el archivo existe
         fecha_subida: new Date(),
         sociedad_id: sociedadId,
+        periodo: periodo,
+        linkCourse: urlcurso,
       },
       { transaction }
     );
 
-    console.log("Usuarios a asociar:", userIds);
+    // Asociar usuarios si están presentes
     for (const userId of userIds) {
       await UsuarioDocumentacion.create(
         {
@@ -76,64 +94,64 @@ const uploadDocumentacion = async (req, res) => {
       );
     }
 
-    await SociedadDocumentacion.create(
-      {
-        sociedad_id: sociedadId,
-        documento_id: newDocument.id,
-        acceso: true,
-        firma: false,
-        fecha_acceso: new Date(),
-      },
-      { transaction }
-    );
-
-    console.log("Grupos a asociar:", grupoIds);
-    if (grupoIds.length > 0) {
-      for (const grupoId of grupoIds) {
-        await GrupoDocumentacion.create(
-          {
-            grupo_id: grupoId,
-            documento_id: newDocument.id,
-            acceso: true,
-            firma: false,
-            fecha_acceso: new Date(),
-          },
-          { transaction }
-        );
-      }
-    } else {
-      console.log("No hay grupos para asociar.");
+    // Asociar a grupos si están presentes
+    for (const grupoId of grupoIds) {
+      await GrupoDocumentacion.create(
+        {
+          grupo_id: grupoId,
+          documento_id: newDocument.id,
+          acceso: true,
+          firma: false,
+          fecha_acceso: new Date(),
+        },
+        { transaction }
+      );
     }
 
-    console.log("Departamentos a asociar:", departamentoIds);
-    if (departamentoIds.length > 0) {
-      for (const departamentoId of departamentoIds) {
-        await DepartamentoDocumentacion.create(
-          {
-            departamento_id: departamentoId,
-            documento_id: newDocument.id,
-            acceso: true,
-            firma: false,
-            fecha_acceso: new Date(),
-          },
-          { transaction }
-        );
-      }
+    // Asociar a departamentos si están presentes
+    for (const departamentoId of departamentoIds) {
+      await DepartamentoDocumentacion.create(
+        {
+          departamento_id: departamentoId,
+          documento_id: newDocument.id,
+          acceso: true,
+          firma: false,
+          fecha_acceso: new Date(),
+        },
+        { transaction }
+      );
+    }
+
+    // Crear una entrada en SociedadDocumentacion solo si no hay usuarios específicos asignados
+    if (
+      userIds.length === 0 &&
+      grupoIds.length === 0 &&
+      departamentoIds.length === 0
+    ) {
+      await SociedadDocumentacion.create(
+        {
+          sociedad_id: sociedadId,
+          documento_id: newDocument.id,
+          acceso: true,
+          firma: false,
+          fecha_acceso: new Date(),
+        },
+        { transaction }
+      );
+      console.log("Documento asociado a la sociedad en general.");
     } else {
-      console.log("No hay departamentos para asociar.");
+      console.log(
+        "Documento asignado a usuarios, grupos o departamentos específicos; no se crea entrada en documentación general."
+      );
     }
 
     await transaction.commit();
-    res.status(201).json(newDocument);
+    res.status(201).json({ message: "Documentación subida correctamente." });
   } catch (error) {
+    console.error("Error al subir documentación:", error);
     await transaction.rollback();
-    console.error("Error al subir el archivo:", error);
-    res.status(500).json({ error: "Error al subir el archivo." });
+    return res.status(500).json({ error: "Error al subir documentación." });
   }
-};
-
-module.exports = {
-  uploadDocumentacion,
 };
 
 const getDocumentacionPorSociedad = async (req, res) => {
@@ -153,6 +171,8 @@ const getDocumentacionPorSociedad = async (req, res) => {
             "fecha_subida",
             "is_firmado",
             "url",
+            "periodo",
+            "linkCourse",
           ],
         },
         {
@@ -251,6 +271,8 @@ const getDocumentosPorGrupoYsociedad = async (req, res) => {
             "fecha_subida",
             "is_firmado",
             "url",
+            "periodo",
+            "linkCourse",
           ],
           include: [
             {
@@ -310,6 +332,8 @@ const getDocumentosPorDepartamentoYsociedad = async (req, res) => {
             "fecha_subida",
             "is_firmado",
             "url",
+            "periodo",
+            "linkCourse",
           ],
           include: [
             {

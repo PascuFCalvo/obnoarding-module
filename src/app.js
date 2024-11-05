@@ -30,7 +30,7 @@ app.use("/roles", require("./routes/rolesRoutes"));
 app.use("/departamentos", require("./routes/departamentosRoutes"));
 app.use("/grupos", require("./routes/gruposRoutes"));
 app.use("/notificaciones", require("./routes/notificacionesRoutes"));
-
+app.use("/turiscool", require("./routes/turiscoolRoutes"));
 app.use("/documentacion", require("./routes/documentacionRoutes"));
 app.use("/signatures", require("./routes/signRoutes")); // Asegúrate de usar la ruta correcta
 
