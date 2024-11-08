@@ -69,7 +69,6 @@ async function createUsuario(req, res) {
         .json({ message: "El nombre de usuario ya está en uso" });
     }
 
-
     // Crear la entrada en la tabla Login
     const login = await Login.create({
       username,
@@ -104,5 +103,91 @@ async function createUsuario(req, res) {
     res.status(500).json({ message: "Error al crear usuario" });
   }
 }
+async function deleteUsuario(req, res) {
+  const id = req.params.id;
 
-module.exports = { getUsuariosBySociedad, createUsuario };
+  try {
+    // Buscar y eliminar el usuario
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    await usuario.destroy();
+
+    // Buscar y eliminar la entrada en la tabla login
+    const login = await Login.findByPk(id);
+    if (!login) {
+      return res.status(404).json({ message: "Login no encontrado" });
+    }
+    await login.destroy();
+
+    res.json({ message: "Usuario y Login eliminados exitosamente" });
+  } catch (error) {
+    console.error("Error al eliminar usuario o login:", error);
+    res.status(500).json({ message: "Error al eliminar usuario o login" });
+  }
+}
+
+async function updateUsuario(req, res) {
+  const id = req.params.id;
+  const {
+    nombre,
+    apellido,
+    email,
+    telefono,
+    direccion,
+    rol_id,
+    marca_id,
+    login,
+    password,
+  } = req.body;
+
+  try {
+    // Buscar el usuario
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Actualizar los datos del usuario
+    usuario.nombre = nombre;
+    usuario.apellido = apellido;
+    usuario.email = email;
+    usuario.telefono = telefono;
+    usuario.direccion = direccion;
+    usuario.marca_id = marca_id || null;
+    await usuario.save();
+
+    const loginUsuario = await Login.findByPk(id);
+    if (!loginUsuario) {
+      return res.status(404).json({ message: "Login no encontrado" });
+    }
+
+    loginUsuario.username = login;
+    loginUsuario.password = password;
+    await loginUsuario.save();
+
+    // Actualizar el rol del usuario en la tabla UsuarioRoles
+    const usuarioRol = await UsuarioRoles.findOne({
+      where: { id_usuario: id },
+    });
+    if (usuarioRol) {
+      usuarioRol.rol_id = rol_id;
+      await usuarioRol.save();
+    } else {
+      await UsuarioRoles.create({ id_usuario: id, rol_id });
+    }
+
+    res.json({ message: "Usuario actualizado exitosamente", usuario });
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).json({ message: "Error al actualizar usuario" });
+  }
+}
+
+module.exports = {
+  getUsuariosBySociedad,
+  createUsuario,
+  deleteUsuario,
+  updateUsuario,
+};
