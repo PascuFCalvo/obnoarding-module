@@ -11,6 +11,7 @@
     "mysql2": "^3.11.3",
     "nodemon": "^3.1.7",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.9.155",
     "prop-types": "^15.8.1",
     "sequelize": "^6.37.4",
     "uuid": "^10.0.0"

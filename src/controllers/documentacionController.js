@@ -64,6 +64,11 @@ const uploadDocumentacion = async (req, res) => {
       const oldPath = `uploads/${req.file.filename}`;
       newPath = `${dirPath}/${newFileName}`;
       fs.renameSync(oldPath, newPath);
+
+      const baseURL = process.env.BASE_URL || "http://localhost:3000";
+      if (!newPath.startsWith("http://") && !newPath.startsWith("https://")) {
+        newPath = `${baseURL}/${newPath}`;
+      }
     }
 
     // Crear el registro de documento en la base de datos

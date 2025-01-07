@@ -31,7 +31,7 @@ module.exports = {
         // Agregando la nueva columna
         type: Sequelize.INTEGER,
         references: {
-          model: "sociedad", // Asegúrate de que el nombre coincida con el de tu tabla
+          model: "Sociedad", // Asegúrate de que el nombre coincida con el de tu tabla
           key: "id",
         },
         onUpdate: "CASCADE",
