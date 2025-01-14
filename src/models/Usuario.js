@@ -18,6 +18,11 @@ module.exports = (sequelize) => {
         foreignKey: "id_usuario",
         as: "notificaciones",
       });
+      Usuario.belongsTo(models.Sociedad, {
+        as: "sociedad", // Alias para referenciar la relación
+        foreignKey: "sociedad_id", // Campo de clave foránea en Usuario
+      });
+
     }
   }
 

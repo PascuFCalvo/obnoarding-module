@@ -1,6 +1,7 @@
 "use strict";
 const { Model, DataTypes } = require("sequelize");
 
+
 module.exports = (sequelize) => {
   class Sociedad extends Model {
     static associate(models) {
@@ -9,8 +10,10 @@ module.exports = (sequelize) => {
         foreignKey: "sociedad_id",
         as: "departamentos",
       });
-  
-
+      Sociedad.hasMany(models.Usuario, {
+        as: "usuarios", // Alias para referenciar usuarios desde Sociedad
+        foreignKey: "sociedad_id", // Campo de clave foránea en Usuario
+      });
     }
   }
 

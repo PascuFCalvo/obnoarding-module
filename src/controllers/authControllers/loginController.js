@@ -8,76 +8,86 @@ const {
   Sociedad,
   Roles,
 } = require("../../models");
+
 const JWT_SECRET = process.env.JWT_SECRET || "tu_secreto_jwt";
 
 async function loginController(req, res) {
   try {
     const { username, password } = req.body;
 
-    // Buscar el usuario en la tabla Login
+    // Verificar usuario en la tabla Login
     const loginUser = await Login.findOne({ where: { username } });
     if (!loginUser || loginUser.password !== password) {
       return res.status(401).json({ message: "Credenciales incorrectas" });
     }
 
-    // Obtener el usuario asociado con el rol, excluyendo grupo_id
+    // Obtener detalles del usuario desde la tabla Usuario
     const usuario = await Usuario.findOne({
       where: { login_id: loginUser.id },
       include: [
         {
           model: Roles,
           as: "roles",
-          through: { attributes: [] }, // No incluir atributos de la tabla intermedia
+          through: { attributes: [] },
         },
         {
           model: Grupo,
-          as: "gruposAsociados", // Asumiendo el alias configurado
+          as: "gruposAsociados",
           through: { model: UsuarioGrupo, attributes: [] },
           include: [
             {
               model: Departamento,
-              as: "departamento", // Alias en el modelo Departamento
+              as: "departamento",
               attributes: ["id", "nombre"],
               include: [
                 {
                   model: Sociedad,
-                  as: "sociedad", // Alias en el modelo Sociedad
+                  as: "sociedad",
                   attributes: ["id", "nombre"],
                 },
               ],
             },
           ],
         },
+        {
+          model: Sociedad,
+          as: "sociedad", // Relación directa con Sociedad
+          attributes: ["id", "nombre"],
+        },
       ],
-      attributes: { exclude: ["grupo_id"] }, // Excluir grupo_id
     });
 
-    // Verificar si se encontró el usuario
     if (!usuario) {
       return res.status(403).json({ message: "Acceso denegado" });
     }
 
-    // Obtener el rol del usuario
-    const roles = usuario.roles.map((role) => role.nombre);
-    let roleToAdd = "";
+    console.log("Usuario encontrado:", JSON.stringify(usuario, null, 2));
 
-    // Verificar los roles y establecer el rol correspondiente
-    if (roles.includes("Manager")) {
-      roleToAdd = "manager";
-    } else if (roles.includes("Empleado")) {
-      roleToAdd = "empleado";
-    } else if (roles.includes("Admin")) {
-      roleToAdd = "admin";
-    } else {
+    // Determinar rol del usuario
+    const roles = usuario.roles.map((role) => role.nombre.toLowerCase());
+    let roleToAdd = roles.includes("admin")
+      ? "admin"
+      : roles.includes("manager")
+      ? "manager"
+      : roles.includes("empleado")
+      ? "empleado"
+      : null;
+
+    if (!roleToAdd) {
       return res
         .status(403)
         .json({ message: "Acceso denegado: rol desconocido" });
     }
 
-    // Obtener los detalles del grupo y departamento
-    const grupo = usuario.gruposAsociados?.[0] || null; // Se asume un usuario pertenece a un solo grupo
-    const departamento = grupo ? grupo.departamento : null;
-    const sociedad = departamento ? departamento.sociedad : null;
+    // Determinar grupo, departamento y sociedad asociados
+    const grupo = usuario.gruposAsociados?.[0] || null;
+    const departamento = grupo?.departamento || null;
+    const sociedad = usuario.sociedad || departamento?.sociedad || null;
+
+    console.log("Datos asociados:");
+    console.log("Grupo:", grupo);
+    console.log("Departamento:", departamento);
+    console.log("Sociedad:", sociedad);
 
     // Generar el token JWT
     const token = jwt.sign(
@@ -85,22 +95,24 @@ async function loginController(req, res) {
         id: usuario.id,
         username: loginUser.username,
         role: roleToAdd,
-        grupoId: grupo ? grupo.id : null,
-        grupoNombre: grupo ? grupo.nombre : null,
-        departamentoId: departamento ? departamento.id : null,
-        departamentoNombre: departamento ? departamento.nombre : null,
-        sociedadId: sociedad ? sociedad.id : null,
-        sociedadNombre: sociedad ? sociedad.nombre : null,
+        grupoId: grupo?.id || null,
+        grupoNombre: grupo?.nombre || null,
+        departamentoId: departamento?.id || null,
+        departamentoNombre: departamento?.nombre || null,
+        sociedadId: sociedad?.id || null,
+        sociedadNombre: sociedad?.nombre || null,
       },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
+    console.log("Token generado con éxito.");
+
     // Responder con el token y el rol
-    res.json({ token, role: roleToAdd });
+    return res.status(200).json({ token, role: roleToAdd });
   } catch (error) {
     console.error("Error en el login:", error);
-    res
+    return res
       .status(500)
       .json({ message: "Error en el servidor", error: error.message });
   }

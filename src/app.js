@@ -42,6 +42,7 @@ app.use("/grupos", require("./routes/gruposRoutes"));
 app.use("/notificaciones", require("./routes/notificacionesRoutes"));
 app.use("/turiscool", require("./routes/turiscoolRoutes"));
 app.use("/documentacion", require("./routes/documentacionRoutes"));
+app.use("/sign", require("./routes/signRoutes"));
 
 // Puerto de escucha
 const PORT = process.env.PORT || 3000;

@@ -216,6 +216,16 @@ const getDocumentosPorUsuarioYsociedad = async (req, res) => {
           model: Documentacion,
           as: "documento",
           where: { sociedad_id: sociedadId },
+          attributes: [
+            "id",
+            "nombre",
+            "descripcion",
+            "fecha_subida",
+            "is_firmado",
+            "url", // URL original de la documentación
+            "periodo",
+            "linkCourse",
+          ],
           include: [
             {
               model: Sociedad,
@@ -225,7 +235,7 @@ const getDocumentosPorUsuarioYsociedad = async (req, res) => {
           ],
         },
       ],
-      attributes: ["firma", "url"], // Incluye 'firma' y 'url' directamente en el modelo
+      attributes: ["firma", "url"], // Incluye 'firma' y 'url' directamente de UsuarioDocumentacion
     });
 
     if (!documentos.length) {
@@ -234,12 +244,19 @@ const getDocumentosPorUsuarioYsociedad = async (req, res) => {
         .json({ message: "No se encontraron documentos para esta sociedad." });
     }
 
-    res.status(200).json(documentos);
+    // Construir respuesta con prioridad en la URL de UsuarioDocumentacion si existe
+    const response = documentos.map((doc) => ({
+      ...doc.toJSON(),
+      finalUrl: doc.url || doc.documento.url, // Usar la URL de UsuarioDocumentacion si existe, de lo contrario usar la URL original
+    }));
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error al obtener documentos por usuario y sociedad:", error);
     res.status(500).json({ message: "Error al obtener documentación." });
   }
 };
+
 
 const getDocumentosPorGrupoYsociedad = async (req, res) => {
   const sociedadId = req.params.sociedadId;
