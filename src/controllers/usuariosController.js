@@ -207,10 +207,52 @@ async function changeUserName(req, res) {
   }
 }
 
+async function changeUserPassword(req, res) {
+  const id = req.params.id;
+  const { password } = req.body;
+
+  try {
+    const login = await Login.findByPk(id);
+    if (!login) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    login.password = password;
+    await login.save();
+
+    res.json({ message: "Contraseña actualizada exitosamente" });
+  } catch (error) {
+    console.error("Error al actualizar contraseña:", error);
+    res.status(500).json({ message: "Error al actualizar contraseña" });
+  }
+}
+
+async function changeUserMail(req, res) {
+  const id = req.params.id;
+  const { email } = req.body;
+
+  try {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    usuario.email = email;
+    await usuario.save();
+
+    res.json({ message: "Email actualizado exitosamente" });
+  } catch (error) {
+    console.error("Error al actualizar email:", error);
+    res.status(500).json({ message: "Error al actualizar email" });
+  }
+}
+
 module.exports = {
   getUsuariosBySociedad,
   createUsuario,
   deleteUsuario,
   updateUsuario,
   changeUserName,
+  changeUserPassword,
+  changeUserMail,
 };
