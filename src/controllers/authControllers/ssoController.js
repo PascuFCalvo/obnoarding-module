@@ -1,11 +1,12 @@
-// src/controllers/authControllers/ssoController.js
-
-// Ensure `axios` is required if you haven't already
 const axios = require("axios");
 
 let accessToken = "rw9PH76m8jX4SMUiIidbnBf1TYLE3yoxt2dCnooP";
 let clientId = "62b182eea31d8d9863079f42";
-let apiUrl = "https://academy.turiscool.com/admin/api/sso"; // make sure this is correctly defined
+let apiUrl = "https://academy.turiscool.com/admin/api/sso";
+
+
+
+
 
 async function ssoLogin(req, res) {
   try {

@@ -52,8 +52,8 @@ async function createUsuario(req, res) {
     marca_id,
   } = req.body;
 
-  // Generar el nombre de usuario como 'nombre.apellido'
-  const username = `${nombre.toLowerCase()}.${apellido.toLowerCase()}`;
+  // Generar el nombre de usuario como 'nombre apellido'
+  const username = `${nombre.toLowerCase()} ${apellido.toLowerCase()}`;
 
   try {
     // Verificar si el email o el username ya existen
@@ -127,7 +127,6 @@ async function deleteUsuario(req, res) {
     res.status(500).json({ message: "Error al eliminar usuario o login" });
   }
 }
-
 async function updateUsuario(req, res) {
   const id = req.params.id;
   const {
@@ -184,10 +183,34 @@ async function updateUsuario(req, res) {
     res.status(500).json({ message: "Error al actualizar usuario" });
   }
 }
+async function changeUserName(req, res) {
+  console.log("entrando a changeUserName");
+  const id = req.params.id;
+  const { username } = req.body;
+
+  console.log("id", id);
+  console.log("username", username);
+
+  try {
+    const login = await Login.findByPk(id);
+    if (!login) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    login.username = username;
+    await login.save();
+
+    res.json({ message: "Nombre de usuario actualizado exitosamente" });
+  } catch (error) {
+    console.error("Error al actualizar nombre de usuario:", error);
+    res.status(500).json({ message: "Error al actualizar nombre de usuario" });
+  }
+}
 
 module.exports = {
   getUsuariosBySociedad,
   createUsuario,
   deleteUsuario,
   updateUsuario,
+  changeUserName,
 };

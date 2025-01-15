@@ -43,7 +43,6 @@ async function signDocument(req, res) {
   };
 
   // Registro en consola para verificar
-  console.log("Nueva Firma Registrada:", newSignature);
 
   // Enviar respuesta con el identificador único
   res.status(201).json({ uniqueIdentifier });
@@ -51,8 +50,6 @@ async function signDocument(req, res) {
 
 async function signAndSaveDcoument(req, res) {
   try {
-    console.log("Archivo recibido:", req.file);
-    console.log("Metadatos recibidos:", req.body.metadata);
 
     if (!req.file) {
       return res.status(400).json({ error: "No se recibió ningún archivo" });
@@ -69,12 +66,7 @@ async function signAndSaveDcoument(req, res) {
         .json({ error: "Faltan datos necesarios para procesar el documento" });
     }
 
-    console.log("Metadatos procesados:", {
-      id_usuario,
-      documento_id,
-      sociedadNombre,
-    });
-
+    
     // Crear la carpeta del usuario si no existe
     const userDirectory = path.join(
       __dirname,
@@ -92,7 +84,6 @@ async function signAndSaveDcoument(req, res) {
     // Guardar el archivo
     fs.writeFileSync(filePath, req.file.buffer);
 
-    console.log("Documento guardado en:", filePath);
 
     // Generar la URL del archivo
     const baseUrl = process.env.BASE_URL || "http://localhost:3000";
@@ -104,10 +95,7 @@ async function signAndSaveDcoument(req, res) {
       { where: { id_usuario, documento_id } } // Asegúrate de usar el documento_id correcto
     );
 
-    console.log(
-      `Intentando actualizar con: { id_usuario: ${id_usuario}, documento_id: ${documento_id} }`
-    );
-    console.log(`Filas actualizadas: ${updatedRows}`);
+    
 
     if (updatedRows === 0) {
       return res

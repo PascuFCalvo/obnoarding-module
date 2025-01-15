@@ -61,7 +61,6 @@ async function loginController(req, res) {
       return res.status(403).json({ message: "Acceso denegado" });
     }
 
-    console.log("Usuario encontrado:", JSON.stringify(usuario, null, 2));
 
     // Determinar rol del usuario
     const roles = usuario.roles.map((role) => role.nombre.toLowerCase());
@@ -84,17 +83,13 @@ async function loginController(req, res) {
     const departamento = grupo?.departamento || null;
     const sociedad = usuario.sociedad || departamento?.sociedad || null;
 
-    console.log("Datos asociados:");
-    console.log("Grupo:", grupo);
-    console.log("Departamento:", departamento);
-    console.log("Sociedad:", sociedad);
-
     // Generar el token JWT
     const token = jwt.sign(
       {
         id: usuario.id,
         username: loginUser.username,
         role: roleToAdd,
+        mail: usuario.email,
         grupoId: grupo?.id || null,
         grupoNombre: grupo?.nombre || null,
         departamentoId: departamento?.id || null,
@@ -106,7 +101,6 @@ async function loginController(req, res) {
       { expiresIn: "1h" }
     );
 
-    console.log("Token generado con éxito.");
 
     // Responder con el token y el rol
     return res.status(200).json({ token, role: roleToAdd });

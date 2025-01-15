@@ -16,7 +16,6 @@ const fs = require("fs");
 const uploadDocumentacion = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    console.log("Datos recibidos en req.body:", req.body);
 
     const {
       users,
@@ -143,11 +142,8 @@ const uploadDocumentacion = async (req, res) => {
         },
         { transaction }
       );
-      console.log("Documento asociado a la sociedad en general.");
     } else {
-      console.log(
-        "Documento asignado a usuarios, grupos o departamentos específicos; no se crea entrada en documentación general."
-      );
+      
     }
 
     await transaction.commit();
@@ -262,11 +258,7 @@ const getDocumentosPorGrupoYsociedad = async (req, res) => {
   const sociedadId = req.params.sociedadId;
 
   try {
-    console.log(
-      "Obteniendo documentos de grupos para la sociedad ID:",
-      sociedadId
-    );
-
+   
     // Verifica las asociaciones definidas en el modelo y los aliases
     const documentos = await GrupoDocumentacion.findAll({
       include: [
@@ -308,13 +300,11 @@ const getDocumentosPorGrupoYsociedad = async (req, res) => {
     });
 
     if (!documentos.length) {
-      console.log("No se encontraron documentos asociados a los grupos.");
       return res
         .status(404)
         .json({ message: "No se encontraron documentos para esta sociedad." });
     }
 
-    console.log("Documentos encontrados:", documentos.length);
     res.status(200).json(documentos);
   } catch (error) {
     console.error("Error al obtener documentos por grupo y sociedad:", error);

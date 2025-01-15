@@ -24,7 +24,6 @@ async function getGruposBySociedad(req, res) {
       ],
     });
 
-    console.log("Grupos encontrados:", grupos);
 
     res.json(grupos);
   } catch (error) {

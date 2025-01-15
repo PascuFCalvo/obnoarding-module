@@ -15,7 +15,6 @@ function authMiddleware(req, res, next) {
       return res.status(403).json({ message: "Token no válido" });
     }
 
-    console.log("Usuario autenticado:", user);
 
     // Solo permite el acceso si el rol es "Manager"
     if (user.role !== "Manager") {

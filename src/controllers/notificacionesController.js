@@ -16,7 +16,6 @@ async function getNotificacionesBySociedad(req, res) {
       ],
     });
 
-    console.log("Notificaciones encontradas:", notificaciones);
 
     res.json(notificaciones);
   } catch (error) {
