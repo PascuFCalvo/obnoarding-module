@@ -1,10 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { getGruposBySociedad } = require("../controllers/gruposController");
-const { createGrupo } = require("../controllers/gruposController");
+const {
+  deleteUserFromGroup,
+  addUserToGroup,
+  getGruposBySociedad,
+  getAllUserGroups, // Asegúrate de usar el nombre correcto
+  createGrupo,
+} = require("../controllers/gruposController");
 
 // Rutas protegidas con authMiddleware
 router.get("/sociedad/:sociedadId", getGruposBySociedad);
 router.post("/", createGrupo);
+router.get("/usuarioGrupo", getAllUserGroups);
+router.post("/addUser", addUserToGroup)
+router.post("/deleteUser", deleteUserFromGroup)
 
 module.exports = router;

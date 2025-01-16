@@ -4,18 +4,13 @@ const { Model, DataTypes } = require("sequelize");
 module.exports = (sequelize) => {
   class UsuarioGrupo extends Model {
     static associate(models) {
-      // Definir alias únicos para evitar conflictos
-      models.Usuario.belongsToMany(models.Grupo, {
-        through: UsuarioGrupo,
+      UsuarioGrupo.belongsTo(models.Usuario, {
         foreignKey: "id_usuario",
-        otherKey: "grupo_id",
-        as: "gruposAsociados", // Cambia este alias a algo único
+        as: "usuario",
       });
-      models.Grupo.belongsToMany(models.Usuario, {
-        through: UsuarioGrupo,
+      UsuarioGrupo.belongsTo(models.Grupo, {
         foreignKey: "grupo_id",
-        otherKey: "id_usuario",
-        as: "usuariosAsociados", // Cambia este alias a algo único
+        as: "grupo",
       });
     }
   }

@@ -1,28 +1,36 @@
-// usuario.js
 "use strict";
 const { Model, DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   class Usuario extends Model {
     static associate(models) {
+      Usuario.belongsToMany(models.Grupo, {
+        through: models.UsuarioGrupo,
+        foreignKey: "id_usuario",
+        otherKey: "grupo_id",
+        as: "gruposDeUsuario", // Alias único
+      });
+
       Usuario.belongsToMany(models.Roles, {
         through: models.UsuarioRoles,
         foreignKey: "id_usuario",
         as: "roles",
       });
+
       Usuario.hasMany(models.UsuarioRoles, {
         foreignKey: "id_usuario",
         as: "usuarioRoles",
       });
+
       Usuario.hasMany(models.Notificaciones, {
         foreignKey: "id_usuario",
         as: "notificaciones",
       });
-      Usuario.belongsTo(models.Sociedad, {
-        as: "sociedad", // Alias para referenciar la relación
-        foreignKey: "sociedad_id", // Campo de clave foránea en Usuario
-      });
 
+      Usuario.belongsTo(models.Sociedad, {
+        as: "sociedad",
+        foreignKey: "sociedad_id",
+      });
     }
   }
 

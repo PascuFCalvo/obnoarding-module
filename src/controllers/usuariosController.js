@@ -190,15 +190,27 @@ async function changeUserName(req, res) {
 
   console.log("id", id);
   console.log("username", username);
+  //unir nombre y apellido con un .
+  let fixedUsername = username.split(" ").join(".");
+  //separar nombre y apellidos solo por el primer espacio
+  let separatedUsername = username.split(" ");
 
   try {
     const login = await Login.findByPk(id);
+    const usuario = await Usuario.findByPk(id);
     if (!login) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    login.username = username;
+    login.username = fixedUsername;
     await login.save();
+
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    usuario.nombre = separatedUsername[0];
+    usuario.apellido = separatedUsername[1];
+    await usuario.save();
 
     res.json({ message: "Nombre de usuario actualizado exitosamente" });
   } catch (error) {

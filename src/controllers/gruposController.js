@@ -1,4 +1,4 @@
-const { Grupo, Departamento } = require("../models");
+const { Grupo, Departamento, UsuarioGrupo, Usuario } = require("../models");
 
 async function getGruposBySociedad(req, res) {
   const sociedadId = req.params.sociedadId;
@@ -24,11 +24,39 @@ async function getGruposBySociedad(req, res) {
       ],
     });
 
-
     res.json(grupos);
   } catch (error) {
     console.error("Error al obtener grupos:", error);
     res.status(500).json({ message: "Error al obtener grupos" });
+  }
+}
+
+async function getAllUserGroups(req, res) {
+  try {
+    // Obtener todos los registros de UsuarioGrupo con las relaciones de Usuario y Grupo
+    const grupos = await UsuarioGrupo.findAll({
+      include: [
+        {
+          model: Usuario,
+          as: "usuario", // Nombre del alias si fue definido en las asociaciones
+          attributes: ["id", "nombre", "apellido", "email"],
+        },
+        {
+          model: Grupo,
+          as: "grupo", // Nombre del alias si fue definido en las asociaciones
+          attributes: ["id", "nombre", "departamento_id"],
+        },
+      ],
+    });
+
+    if (grupos.length === 0) {
+      return res.status(404).json({ message: "No se encontraron grupos" });
+    }
+
+    res.json(grupos);
+  } catch (error) {
+    console.error("Error al obtener los grupos:", error);
+    res.status(500).json({ message: "Error al obtener los grupos" });
   }
 }
 
@@ -60,4 +88,51 @@ async function createGrupo(req, res) {
   }
 }
 
-module.exports = { getGruposBySociedad, createGrupo };
+async function addUserToGroup(req, res) {
+  try {
+    const { id_usuario, grupo_id } = req.body;
+
+    // Valida que ambos parámetros estén presentes
+    if (!id_usuario || !grupo_id) {
+      return res.status(400).json({ message: "Datos incompletos" });
+    }
+
+    // Crea la relación en la tabla `UsuarioGrupo`
+    await UsuarioGrupo.create({ id_usuario, grupo_id });
+
+    res.status(201).json({ message: "Usuario agregado al grupo exitosamente" });
+  } catch (error) {
+    console.error("Error al agregar usuario al grupo:", error);
+    res.status(500).json({ message: "Error al agregar usuario al grupo" });
+  }
+}
+async function deleteUserFromGroup(req, res) {
+  try {
+    const { id_usuario, grupo_id } = req.body;
+
+    // Valida que ambos parámetros estén presentes
+    if (!id_usuario || !grupo_id) {
+      return res.status(400).json({ message: "Datos incompletos" });
+    }
+
+    // Elimina la relación en la tabla `UsuarioGrupo`
+    await UsuarioGrupo.destroy({ where: { id_usuario, grupo_id } });
+
+    res.json({ message: "Usuario eliminado del grupo exitosamente" });
+  } catch (error) {
+    console.error("Error al eliminar usuario del grupo:", error);
+    res.status(500).json({ message: "Error al eliminar usuario del grupo" });
+  }
+}
+
+module.exports = {
+  addUserToGroup,
+};
+
+module.exports = {
+  getGruposBySociedad,
+  createGrupo,
+  getAllUserGroups,
+  addUserToGroup,
+  deleteUserFromGroup,
+};
